@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zonas de Entrega | v2</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --primary: #2d6a4f;
+      --secondary: #40916c;
+      --accent: #74c69d;
+      --bg-gradient: linear-gradient(135deg, #1b4332 0%, #2d6a4f 100%);
+      --glass: rgba(255, 255, 255, 0.95);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-gradient);
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      color: #1b4332;
+    }
+
+    .container {
+      background: var(--glass);
+      backdrop-filter: blur(10px);
+      padding: 40px;
+      border-radius: 30px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+      text-align: center;
+    }
+
+    h1 { font-weight: 800; font-size: 28px; margin-bottom: 25px; }
+
+    .search-box { position: relative; margin-bottom: 20px; }
+
+    input {
+      width: 100%;
+      padding: 15px 20px;
+      border-radius: 15px;
+      border: 2px solid #e0e0e0;
+      outline: none;
+      font-size: 16px;
+      box-sizing: border-box;
+      transition: all 0.3s ease;
+    }
+
+    input:focus { border-color: var(--secondary); }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 5px 0;
+      position: absolute;
+      width: 100%;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+      z-index: 10;
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #eee;
+    }
+
+    li {
+      padding: 12px 20px;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    /* Clase para el elemento seleccionado con flechas */
+    li.active, li:hover {
+      background: #d8f3dc;
+      color: var(--primary);
+      font-weight: 600;
+      padding-left: 25px;
+    }
+
+    .resultado-container { min-height: 60px; margin-bottom: 20px; }
+    .resultado { font-size: 22px; font-weight: 800; color: var(--primary); }
+
+    .grid-contadores {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-top: 25px;
+    }
+
+    .card-contador {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 18px;
+      border: 1px solid #eee;
+    }
+
+    .card-label { font-size: 12px; font-weight: 600; color: #666; display: block; }
+    .card-value { font-size: 20px; font-weight: 800; color: var(--secondary); }
+
+    .btn-reset {
+      margin-top: 30px;
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 15px;
+      background: var(--primary);
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>📦 Despacho Express</h1>
+  
+  <div class="search-box">
+    <input type="text" id="input" placeholder="Escribí una ciudad..." autocomplete="off">
+    <ul id="sugerencias"></ul>
+  </div>
+
+  <div class="resultado-container">
+    <div class="resultado" id="resultado">Esperando ciudad...</div>
+  </div>
+
+  <div class="grid-contadores">
+    <div class="card-contador"><span class="card-label">GBA 1</span><span class="card-value" id="gba1">0</span></div>
+    <div class="card-contador"><span class="card-label">GBA 2</span><span class="card-value" id="gba2">0</span></div>
+    <div class="card-contador"><span class="card-label">Lejanas</span><span class="card-value" id="lejanas">0</span></div>
+    <div class="card-contador"><span class="card-label">CABA</span><span class="card-value" id="caba">0</span></div>
+  </div>
+
+  <button class="btn-reset" onclick="resetear()">Reiniciar sesión</button>
+</div>
+
+<script>
+const zonas = {
+  "san isidro": "GBA 1", "vicente lopez": "GBA 1", "san martin": "GBA 1", "tres de febrero": "GBA 1",
+  "hurlingham": "GBA 1", "moron": "GBA 1", "ituzaingo": "GBA 1", "la matanza norte": "GBA 1",
+  "lomas de zamora": "GBA 1", "lanus": "GBA 1", "avellaneda": "GBA 1",
+  "tigre": "GBA 2", "san fernando": "GBA 2", "malvinas argentinas": "GBA 2", "jose c paz": "GBA 2",
+  "san miguel": "GBA 2", "moreno": "GBA 2", "merlo": "GBA 2", "la matanza sur": "GBA 2",
+  "ezeiza": "GBA 2", "esteban echeverria": "GBA 2", "almirante brown": "GBA 2", "quilmes": "GBA 2",
+  "florencio varela": "GBA 2", "berazategui": "GBA 2",
+  "zarate": "Zonas Lejanas", "campana": "Zonas Lejanas", "escobar": "Zonas Lejanas", "villa rosa": "Zonas Lejanas",
+  "del viso": "Zonas Lejanas", "garin": "Zonas Lejanas", "derqui": "Zonas Lejanas", "pilar": "Zonas Lejanas",
+  "ingeniero maschwitz": "Zonas Lejanas", "lujan": "Zonas Lejanas", "general rodriguez": "Zonas Lejanas",
+  "marcos paz": "Zonas Lejanas", "cañuelas": "Zonas Lejanas", "san vicente": "Zonas Lejanas",
+  "guernica": "Zonas Lejanas", "ensenada": "Zonas Lejanas", "berisso": "Zonas Lejanas",
+  "la plata norte": "Zonas Lejanas", "la plata oeste": "Zonas Lejanas", "la plata centro": "Zonas Lejanas",
+  "caba": "CABA"
+};
+
+const contadores = { "GBA 1": 0, "GBA 2": 0, "Zonas Lejanas": 0, "CABA": 0 };
+let currentFocus = -1; // Para rastrear la posición en la lista
+let filtradas = [];
+
+const input = document.getElementById("input");
+const sugerencias = document.getElementById("sugerencias");
+const resultado = document.getElementById("resultado");
+
+function normalizar(texto) {
+  return texto.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+input.addEventListener("input", () => {
+  const valor = normalizar(input.value);
+  sugerencias.innerHTML = "";
+  currentFocus = -1; 
+  
+  if (valor === "") return;
+
+  filtradas = Object.keys(zonas).filter(c => normalizar(c).includes(valor)).slice(0, 5);
+
+  filtradas.forEach((ciudad, index) => {
+    const li = document.createElement("li");
+    li.textContent = ciudad.toUpperCase();
+    li.setAttribute("id", "sug-" + index);
+    li.onclick = () => seleccionarCiudad(ciudad);
+    sugerencias.appendChild(li);
+  });
+});
+
+// NUEVO: Manejo de teclado (Flechas y Enter)
+input.addEventListener("keydown", (e) => {
+  const items = sugerencias.getElementsByTagName("li");
+  
+  if (e.keyCode === 40) { // Flecha ABAJO
+    currentFocus++;
+    addActive(items);
+  } else if (e.keyCode === 38) { // Flecha ARRIBA
+    currentFocus--;
+    addActive(items);
+  } else if (e.keyCode === 13) { // Tecla ENTER
+    e.preventDefault();
+    if (currentFocus > -1 && items[currentFocus]) {
+      items[currentFocus].click();
+    } else if (filtradas.length > 0) {
+      // Si no hay nada resaltado pero hay resultados, elige el primero
+      seleccionarCiudad(filtradas[0]);
+    }
+  }
+});
+
+function addActive(items) {
+  if (!items) return false;
+  removeActive(items);
+  if (currentFocus >= items.length) currentFocus = 0;
+  if (currentFocus < 0) currentFocus = items.length - 1;
+  items[currentFocus].classList.add("active");
+  items[currentFocus].scrollIntoView({ block: "nearest" });
+}
+
+function removeActive(items) {
+  for (let i = 0; i < items.length; i++) {
+    items[i].classList.remove("active");
+  }
+}
+
+function seleccionarCiudad(ciudad) {
+  const zona = zonas[ciudad];
+  resultado.textContent = "Zona: " + zona;
+  
+  contadores[zona]++;
+  actualizarContadores();
+  
+  // Limpiar buscador para la siguiente carga
+  input.value = ""; 
+  sugerencias.innerHTML = "";
+  input.focus(); 
+}
+
+function actualizarContadores() {
+  document.getElementById("gba1").textContent = contadores["GBA 1"];
+  document.getElementById("gba2").textContent = contadores["GBA 2"];
+  document.getElementById("lejanas").textContent = contadores["Zonas Lejanas"];
+  document.getElementById("caba").textContent = contadores["CABA"];
+}
+
+function resetear() {
+  for (let zona in contadores) contadores[zona] = 0;
+  actualizarContadores();
+  resultado.textContent = "Esperando ciudad...";
+  input.focus();
+}
+
+document.addEventListener("click", (e) => {
+  if (e.target !== input) sugerencias.innerHTML = "";
+});
+</script>
+
+</body>
+</html>
