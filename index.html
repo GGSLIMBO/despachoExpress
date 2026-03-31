@@ -13,34 +13,51 @@
       --accent: #74c69d;
       --bg-gradient: linear-gradient(135deg, #1b4332 0%, #2d6a4f 100%);
       --glass: rgba(255, 255, 255, 0.95);
+      --danger: #e63946;
     }
 
     body {
       font-family: 'Inter', sans-serif;
       background: var(--bg-gradient);
       margin: 0;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
       min-height: 100vh;
-      padding: 20px;
       color: #1b4332;
       box-sizing: border-box;
+      padding: 30px 20px;
     }
 
-    .container {
+    /* Layout Principal: Dos columnas en pantallas grandes */
+    .app-layout {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 25px;
+      justify-content: center;
+      align-items: flex-start;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .panel {
       background: var(--glass);
       backdrop-filter: blur(10px);
       padding: 30px;
       border-radius: 30px;
       width: 100%;
-      max-width: 400px;
       box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-      text-align: center;
-      margin-bottom: 20px;
+      box-sizing: border-box;
     }
 
-    h1 { font-weight: 800; font-size: 26px; margin-bottom: 20px; }
+    .panel-principal { max-width: 420px; text-align: center; }
+    .panel-historial { max-width: 420px; max-height: 85vh; overflow-y: auto; }
+
+    /* Scrollbar personalizado para el historial */
+    .panel-historial::-webkit-scrollbar { width: 8px; }
+    .panel-historial::-webkit-scrollbar-track { background: transparent; }
+    .panel-historial::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+    h1, h2 { font-weight: 800; margin-top: 0; }
+    h1 { font-size: 24px; margin-bottom: 20px; }
+    h2 { font-size: 20px; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
 
     .acciones-header {
       display: flex;
@@ -50,13 +67,15 @@
 
     .acciones-header input[type="date"] {
       flex: 1;
-      padding: 10px;
+      padding: 12px;
       border-radius: 12px;
       border: 2px solid #e0e0e0;
       font-family: 'Inter', sans-serif;
       font-weight: 600;
       color: var(--primary);
+      outline: none;
     }
+    .acciones-header input[type="date"]:focus { border-color: var(--secondary); }
 
     .search-box { position: relative; margin-bottom: 20px; }
 
@@ -103,8 +122,8 @@
       padding-left: 25px;
     }
 
-    .resultado-container { min-height: 40px; margin-bottom: 15px; }
-    .resultado { font-size: 20px; font-weight: 800; color: var(--primary); }
+    .resultado-container { min-height: 30px; margin-bottom: 15px; }
+    .resultado { font-size: 18px; font-weight: 800; color: var(--primary); }
 
     .grid-contadores {
       display: grid;
@@ -121,106 +140,153 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      transition: all 0.2s;
     }
+    .card-contador:focus-within { border-color: var(--secondary); background: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
 
-    .card-label { font-size: 12px; font-weight: 600; color: #666; }
-    .card-value { font-size: 22px; font-weight: 800; color: var(--secondary); margin-top: 5px; width: 100%; border: none; background: transparent; text-align: center;}
-    .card-value:focus { outline: none; border-bottom: 2px solid var(--secondary); }
+    .card-label { font-size: 13px; font-weight: 600; color: #666; }
+    
+    /* Inputs numéricos editables */
+    .card-value { 
+      font-size: 26px; 
+      font-weight: 800; 
+      color: var(--secondary); 
+      margin-top: 5px; 
+      width: 100%; 
+      border: none; 
+      background: transparent; 
+      text-align: center;
+      font-family: 'Inter', sans-serif;
+    }
+    .card-value:focus { outline: none; }
+    /* Ocultar flechitas del input number */
+    .card-value::-webkit-inner-spin-button, .card-value::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 
     .btn {
       width: 100%;
-      padding: 12px;
+      padding: 14px;
       border: none;
       border-radius: 15px;
-      font-weight: 600;
+      font-weight: 700;
+      font-size: 15px;
       cursor: pointer;
       margin-top: 10px;
-      transition: opacity 0.2s;
+      transition: all 0.2s;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
     }
-    .btn:hover { opacity: 0.9; }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+    .btn:active { transform: translateY(0); }
     
-    .btn-guardar { background: var(--secondary); color: white; margin-top: 20px;}
-    .btn-historial { background: #e9ecef; color: #333; }
-    .btn-reset { background: #ff4d4d; color: white; }
+    .btn-guardar { background: var(--secondary); color: white; margin-top: 25px;}
+    .btn-reset { background: transparent; color: var(--danger); border: 2px solid var(--danger); margin-top: 15px; }
+    .btn-reset:hover { background: var(--danger); color: white; }
 
-    /* Estilos del Historial */
-    #panel-historial {
-      display: none;
-      margin-top: 20px;
-      background: rgba(255,255,255,0.9);
-      border-radius: 20px;
-      padding: 20px;
-      text-align: left;
-    }
+    /* Estilos de los items del Historial */
     .registro-dia {
       background: white;
-      padding: 15px;
-      border-radius: 12px;
-      margin-bottom: 10px;
-      border: 1px solid #ddd;
+      padding: 16px;
+      border-radius: 16px;
+      margin-bottom: 12px;
+      border: 1px solid #e2e8f0;
+      transition: all 0.2s;
     }
+    .registro-dia:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-color: #cbd5e1; }
+    
     .registro-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-weight: 800;
-      margin-bottom: 10px;
-      color: var(--primary);
+      margin-bottom: 12px;
     }
-    .registro-datos { font-size: 14px; color: #555; }
-    .btn-cargar {
-      background: var(--primary);
-      color: white;
+    .registro-fecha { font-weight: 800; color: var(--primary); font-size: 15px;}
+    .registro-total { background: #d8f3dc; color: var(--primary); padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 800; }
+    
+    .registro-datos { 
+      font-size: 13px; 
+      color: #475569; 
+      background: #f8fafc;
+      padding: 10px;
+      border-radius: 10px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .registro-datos span { display: flex; justify-content: space-between; }
+    .registro-datos b { color: var(--secondary); }
+
+    .registro-acciones { display: flex; gap: 8px; }
+    .btn-accion {
+      flex: 1;
       border: none;
-      padding: 5px 10px;
+      padding: 8px;
       border-radius: 8px;
       cursor: pointer;
       font-size: 12px;
+      font-weight: 600;
+      transition: opacity 0.2s;
     }
-    .btn-eliminar {
-      background: #ff4d4d;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 12px;
-      margin-left: 5px;
-    }
+    .btn-accion:hover { opacity: 0.8; }
+    .btn-editar { background: #e2e8f0; color: #334155; }
+    .btn-eliminar { background: #fee2e2; color: var(--danger); }
+
+    .empty-state { text-align: center; color: #64748b; font-size: 14px; padding: 20px 0; }
+
   </style>
 </head>
 <body>
 
-<div class="container">
-  <h1>📦 Despacho Express</h1>
+<div class="app-layout">
   
-  <div class="acciones-header">
-    <input type="date" id="fechaActual">
+  <!-- PANEL IZQUIERDO: Carga y Conteo -->
+  <div class="panel panel-principal">
+    <h1>📦 Despacho Express</h1>
+    
+    <div class="acciones-header">
+      <input type="date" id="fechaActual" title="Elegí la fecha del registro">
+    </div>
+
+    <div class="search-box">
+      <input type="text" id="input" placeholder="Escribí una ciudad..." autocomplete="off">
+      <ul id="sugerencias"></ul>
+    </div>
+
+    <div class="resultado-container">
+      <div class="resultado" id="resultado">Esperando ciudad...</div>
+    </div>
+
+    <div class="grid-contadores">
+      <div class="card-contador">
+        <span class="card-label">GBA 1</span>
+        <input type="number" class="card-value" id="gba1" value="0" min="0" onchange="sincronizarContadores()">
+      </div>
+      <div class="card-contador">
+        <span class="card-label">GBA 2</span>
+        <input type="number" class="card-value" id="gba2" value="0" min="0" onchange="sincronizarContadores()">
+      </div>
+      <div class="card-contador">
+        <span class="card-label">Lejanas</span>
+        <input type="number" class="card-value" id="lejanas" value="0" min="0" onchange="sincronizarContadores()">
+      </div>
+      <div class="card-contador">
+        <span class="card-label">CABA</span>
+        <input type="number" class="card-value" id="caba" value="0" min="0" onchange="sincronizarContadores()">
+      </div>
+    </div>
+
+    <button class="btn btn-guardar" onclick="guardarDia()">💾 Guardar Registro</button>
+    <button class="btn btn-reset" onclick="resetear()">🗑️ Limpiar panel</button>
   </div>
 
-  <div class="search-box">
-    <input type="text" id="input" placeholder="Escribí una ciudad..." autocomplete="off">
-    <ul id="sugerencias"></ul>
-  </div>
-
-  <div class="resultado-container">
-    <div class="resultado" id="resultado">Esperando ciudad...</div>
-  </div>
-
-  <div class="grid-contadores">
-    <div class="card-contador"><span class="card-label">GBA 1</span><input type="number" class="card-value" id="gba1" value="0" min="0" onchange="actualizarDesdeInput('GBA 1', this.value)"></div>
-    <div class="card-contador"><span class="card-label">GBA 2</span><input type="number" class="card-value" id="gba2" value="0" min="0" onchange="actualizarDesdeInput('GBA 2', this.value)"></div>
-    <div class="card-contador"><span class="card-label">Lejanas</span><input type="number" class="card-value" id="lejanas" value="0" min="0" onchange="actualizarDesdeInput('Zonas Lejanas', this.value)"></div>
-    <div class="card-contador"><span class="card-label">CABA</span><input type="number" class="card-value" id="caba" value="0" min="0" onchange="actualizarDesdeInput('CABA', this.value)"></div>
-  </div>
-
-  <button class="btn btn-guardar" onclick="guardarDia()">💾 Guardar Día</button>
-  <button class="btn btn-historial" onclick="toggleHistorial()">📅 Ver Historial</button>
-  <button class="btn btn-reset" onclick="resetear()">🗑️ Limpiar contadores actuales</button>
-
-  <div id="panel-historial">
-    <h3 style="margin-top:0; color: var(--primary);">Historial de Despachos</h3>
-    <div id="lista-historial"></div>
+  <!-- PANEL DERECHO: Historial -->
+  <div class="panel panel-historial">
+    <h2>📅 Historial de Despachos</h2>
+    <div id="lista-historial">
+      <!-- Los registros se cargan acá mediante JS -->
+    </div>
   </div>
 
 </div>
@@ -243,22 +309,28 @@ const zonas = {
   "caba": "CABA"
 };
 
+// Objeto de estado en memoria
 let contadores = { "GBA 1": 0, "GBA 2": 0, "Zonas Lejanas": 0, "CABA": 0 };
 let currentFocus = -1;
 let filtradas = [];
 
-// Inicializar fecha de hoy
-document.getElementById('fechaActual').valueAsDate = new Date();
-
 const input = document.getElementById("input");
 const sugerencias = document.getElementById("sugerencias");
 const resultado = document.getElementById("resultado");
+const inputFecha = document.getElementById('fechaActual');
 
+// --- INICIALIZACIÓN ---
+window.onload = () => {
+  // Setear la fecha de hoy por defecto si no hay nada
+  inputFecha.valueAsDate = new Date();
+  renderizarHistorial();
+};
+
+// --- LÓGICA DE BÚSQUEDA ---
 function normalizar(texto) {
   return texto.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
-// Lógica de búsqueda original (intacta)
 input.addEventListener("input", () => {
   const valor = normalizar(input.value);
   sugerencias.innerHTML = "";
@@ -303,11 +375,13 @@ function seleccionarCiudad(ciudad) {
   resultado.textContent = "Última: " + zona;
   contadores[zona]++;
   actualizarVistaContadores();
+  
   input.value = ""; 
   sugerencias.innerHTML = "";
   input.focus(); 
 }
 
+// Actualiza los inputs HTML usando los valores en memoria
 function actualizarVistaContadores() {
   document.getElementById("gba1").value = contadores["GBA 1"];
   document.getElementById("gba2").value = contadores["GBA 2"];
@@ -315,46 +389,58 @@ function actualizarVistaContadores() {
   document.getElementById("caba").value = contadores["CABA"];
 }
 
-function actualizarDesdeInput(zona, valor) {
-  contadores[zona] = parseInt(valor) || 0;
+// Actualiza la memoria leyendo lo que el usuario escribió a mano en los inputs
+function sincronizarContadores() {
+  contadores["GBA 1"] = parseInt(document.getElementById("gba1").value) || 0;
+  contadores["GBA 2"] = parseInt(document.getElementById("gba2").value) || 0;
+  contadores["Zonas Lejanas"] = parseInt(document.getElementById("lejanas").value) || 0;
+  contadores["CABA"] = parseInt(document.getElementById("caba").value) || 0;
 }
 
 function resetear() {
-  if(confirm("¿Seguro que querés reiniciar los contadores de la vista actual? (No borra el historial)")) {
+  if(confirm("¿Seguro que querés limpiar los números actuales de la pantalla? (Esto no borra el historial)")) {
     contadores = { "GBA 1": 0, "GBA 2": 0, "Zonas Lejanas": 0, "CABA": 0 };
     actualizarVistaContadores();
     resultado.textContent = "Esperando ciudad...";
+    inputFecha.valueAsDate = new Date(); // Resetear fecha a hoy
     input.focus();
   }
 }
 
-// --- NUEVA LÓGICA DE HISTORIAL (LocalStorage) ---
+// --- LÓGICA DE HISTORIAL (LocalStorage) ---
 
-function guardarDia() {
-  const fecha = document.getElementById("fechaActual").value;
-  if (!fecha) return alert("Por favor, elegí una fecha.");
-  
-  // Obtener historial existente o crear uno nuevo
-  let historial = JSON.parse(localStorage.getItem("historialDespachos")) || {};
-  
-  // Guardar una copia de los contadores actuales en esa fecha
-  historial[fecha] = { ...contadores };
-  
-  // Guardar de vuelta en localStorage
-  localStorage.setItem("historialDespachos", JSON.stringify(historial));
-  
-  alert(`¡Datos del día ${fecha} guardados exitosamente!`);
-  renderizarHistorial(); // Actualizar la lista si está abierta
+function formatearFecha(fechaYYYYMMDD) {
+  // Convierte "2023-10-25" a "25/10/2023"
+  if (!fechaYYYYMMDD) return "";
+  const partes = fechaYYYYMMDD.split('-');
+  return `${partes[2]}/${partes[1]}/${partes[0]}`;
 }
 
-function toggleHistorial() {
-  const panel = document.getElementById("panel-historial");
-  if (panel.style.display === "block") {
-    panel.style.display = "none";
-  } else {
-    panel.style.display = "block";
-    renderizarHistorial();
+function guardarDia() {
+  const fecha = inputFecha.value;
+  if (!fecha) {
+    alert("Por favor, elegí una fecha en el calendario.");
+    return;
   }
+  
+  // Asegurarnos de que los contadores en memoria estén sincronizados con lo que muestra la pantalla (por si editaron a mano)
+  sincronizarContadores();
+  
+  let historial = JSON.parse(localStorage.getItem("historialDespachos")) || {};
+  
+  // Guardamos/Sobreescribimos el registro
+  historial[fecha] = { ...contadores };
+  localStorage.setItem("historialDespachos", JSON.stringify(historial));
+  
+  // Feedback visual sin ser molesto con un alert
+  resultado.textContent = "¡Guardado exitoso!";
+  resultado.style.color = "#40916c";
+  setTimeout(() => {
+    resultado.textContent = "Esperando ciudad...";
+    resultado.style.color = "var(--primary)";
+  }, 2000);
+
+  renderizarHistorial();
 }
 
 function renderizarHistorial() {
@@ -363,10 +449,10 @@ function renderizarHistorial() {
   
   contenedor.innerHTML = "";
   
-  const fechas = Object.keys(historial).sort().reverse(); // Ordenar de más nuevo a más viejo
+  const fechas = Object.keys(historial).sort().reverse(); // De más nuevo a más viejo
   
   if (fechas.length === 0) {
-    contenedor.innerHTML = "<p style='font-size: 14px; color: #666;'>No hay días guardados todavía.</p>";
+    contenedor.innerHTML = '<div class="empty-state">No hay registros guardados.<br>Cargá zonas y dale a "Guardar Registro".</div>';
     return;
   }
 
@@ -374,21 +460,22 @@ function renderizarHistorial() {
     const datos = historial[fecha];
     const total = datos["GBA 1"] + datos["GBA 2"] + datos["Zonas Lejanas"] + datos["CABA"];
     
-    // Formatear fecha para lectura en Argentina (DD/MM/YYYY)
-    const fechaFormat = fecha.split('-').reverse().join('/');
-
     const div = document.createElement("div");
     div.className = "registro-dia";
     div.innerHTML = `
       <div class="registro-header">
-        <span>📅 ${fechaFormat} (Total: ${total})</span>
-        <div>
-          <button class="btn-cargar" onclick="cargarDia('${fecha}')">✏️ Editar</button>
-          <button class="btn-eliminar" onclick="eliminarDia('${fecha}')">❌</button>
-        </div>
+        <span class="registro-fecha">📅 ${formatearFecha(fecha)}</span>
+        <span class="registro-total">Total: ${total}</span>
       </div>
       <div class="registro-datos">
-        GBA1: <b>${datos["GBA 1"]}</b> | GBA2: <b>${datos["GBA 2"]}</b> | Lejanas: <b>${datos["Zonas Lejanas"]}</b> | CABA: <b>${datos["CABA"]}</b>
+        <span>GBA 1: <b>${datos["GBA 1"]}</b></span>
+        <span>GBA 2: <b>${datos["GBA 2"]}</b></span>
+        <span>Lejanas: <b>${datos["Zonas Lejanas"]}</b></span>
+        <span>CABA: <b>${datos["CABA"]}</b></span>
+      </div>
+      <div class="registro-acciones">
+        <button class="btn-accion btn-editar" onclick="cargarDia('${fecha}')">✏️ Editar</button>
+        <button class="btn-accion btn-eliminar" onclick="eliminarDia('${fecha}')">❌ Borrar</button>
       </div>
     `;
     contenedor.appendChild(div);
@@ -398,16 +485,23 @@ function renderizarHistorial() {
 function cargarDia(fecha) {
   const historial = JSON.parse(localStorage.getItem("historialDespachos")) || {};
   if (historial[fecha]) {
+    // 1. Cargar datos a la memoria
     contadores = { ...historial[fecha] };
-    document.getElementById("fechaActual").value = fecha;
+    
+    // 2. Cargar datos a la pantalla
     actualizarVistaContadores();
+    inputFecha.value = fecha;
+    
     resultado.textContent = "Editando registro...";
-    alert(`Día ${fecha} cargado. Hacé los cambios y volvé a presionar "Guardar Día" para sobreescribirlo.`);
+    resultado.style.color = "#e63946"; // Rojo para indicar que estamos editando algo viejo
+    
+    // Scroll arriba en móvil
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 }
 
 function eliminarDia(fecha) {
-  if(confirm(`¿Estás seguro de que querés borrar el registro del día ${fecha}?`)) {
+  if(confirm(`¿Estás seguro de que querés borrar todo el registro del ${formatearFecha(fecha)}?`)) {
     let historial = JSON.parse(localStorage.getItem("historialDespachos")) || {};
     delete historial[fecha];
     localStorage.setItem("historialDespachos", JSON.stringify(historial));
