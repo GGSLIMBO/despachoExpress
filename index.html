@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Zonas de Entrega | v3</title>
+  <title>Zonas de Entrega | v4</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   
   <style>
@@ -14,6 +14,7 @@
       --bg-gradient: linear-gradient(135deg, #1b4332 0%, #2d6a4f 100%);
       --glass: rgba(255, 255, 255, 0.95);
       --danger: #e63946;
+      --info: #3a86ff;
     }
 
     body {
@@ -26,14 +27,13 @@
       padding: 30px 20px;
     }
 
-    /* Layout Principal: Dos columnas en pantallas grandes */
     .app-layout {
       display: flex;
       flex-wrap: wrap;
       gap: 25px;
       justify-content: center;
       align-items: flex-start;
-      max-width: 1000px;
+      max-width: 1100px;
       margin: 0 auto;
     }
 
@@ -47,10 +47,9 @@
       box-sizing: border-box;
     }
 
-    .panel-principal { max-width: 420px; text-align: center; }
-    .panel-historial { max-width: 420px; max-height: 85vh; overflow-y: auto; }
+    .panel-principal { max-width: 450px; text-align: center; }
+    .panel-historial { max-width: 450px; max-height: 85vh; overflow-y: auto; }
 
-    /* Scrollbar personalizado para el historial */
     .panel-historial::-webkit-scrollbar { width: 8px; }
     .panel-historial::-webkit-scrollbar-track { background: transparent; }
     .panel-historial::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -75,24 +74,38 @@
       color: var(--primary);
       outline: none;
     }
-    .acciones-header input[type="date"]:focus { border-color: var(--secondary); }
 
-    .search-box { position: relative; margin-bottom: 20px; }
+    .input-group {
+      margin-bottom: 15px;
+      text-align: left;
+    }
+
+    .input-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 5px;
+      margin-left: 5px;
+      color: var(--secondary);
+      text-transform: uppercase;
+    }
+
+    .search-box { position: relative; }
 
     input[type="text"] {
       width: 100%;
-      padding: 15px 20px;
-      border-radius: 15px;
+      padding: 12px 15px;
+      border-radius: 12px;
       border: 2px solid #e0e0e0;
       outline: none;
-      font-size: 16px;
+      font-size: 15px;
       box-sizing: border-box;
       transition: all 0.3s ease;
     }
 
     input[type="text"]:focus { border-color: var(--secondary); }
 
-    ul {
+    .sugerencias-list {
       list-style: none;
       padding: 0;
       margin: 5px 0;
@@ -101,54 +114,51 @@
       background: white;
       border-radius: 12px;
       box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-      z-index: 10;
-      max-height: 200px;
+      z-index: 100;
+      max-height: 180px;
       overflow-y: auto;
       border: 1px solid #eee;
     }
 
-    li {
-      padding: 12px 20px;
+    .sugerencias-list li {
+      padding: 10px 15px;
       cursor: pointer;
       text-align: left;
       transition: all 0.2s;
       border-bottom: 1px solid #f0f0f0;
+      font-size: 14px;
     }
 
-    li.active, li:hover {
+    .sugerencias-list li.active, .sugerencias-list li:hover {
       background: #d8f3dc;
       color: var(--primary);
       font-weight: 600;
-      padding-left: 25px;
     }
 
-    .resultado-container { min-height: 30px; margin-bottom: 15px; }
-    .resultado { font-size: 18px; font-weight: 800; color: var(--primary); }
+    .resultado-container { min-height: 30px; margin-bottom: 10px; }
+    .resultado { font-size: 16px; font-weight: 800; color: var(--primary); }
 
     .grid-contadores {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 15px;
-      margin-top: 15px;
+      gap: 12px;
+      margin-top: 10px;
     }
 
     .card-contador {
       background: #f8f9fa;
-      padding: 15px;
-      border-radius: 18px;
+      padding: 12px;
+      border-radius: 15px;
       border: 1px solid #eee;
       display: flex;
       flex-direction: column;
       align-items: center;
-      transition: all 0.2s;
     }
-    .card-contador:focus-within { border-color: var(--secondary); background: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
 
-    .card-label { font-size: 13px; font-weight: 600; color: #666; }
+    .card-label { font-size: 11px; font-weight: 700; color: #666; }
     
-    /* Inputs numéricos editables */
     .card-value { 
-      font-size: 26px; 
+      font-size: 22px; 
       font-weight: 800; 
       color: var(--secondary); 
       margin-top: 5px; 
@@ -159,7 +169,6 @@
       font-family: 'Inter', sans-serif;
     }
     .card-value:focus { outline: none; }
-    /* Ocultar flechitas del input number */
     .card-value::-webkit-inner-spin-button, .card-value::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 
     .btn {
@@ -178,34 +187,40 @@
       gap: 8px;
     }
     .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-    .btn:active { transform: translateY(0); }
     
-    .btn-guardar { background: var(--secondary); color: white; margin-top: 25px;}
-    .btn-reset { background: transparent; color: var(--danger); border: 2px solid var(--danger); margin-top: 15px; }
+    .btn-guardar { background: var(--secondary); color: white; margin-top: 20px;}
+    .btn-reset { background: transparent; color: var(--danger); border: 2px solid var(--danger); margin-top: 10px; }
     .btn-reset:hover { background: var(--danger); color: white; }
 
-    /* Estilos de los items del Historial */
     .registro-dia {
       background: white;
       padding: 16px;
       border-radius: 16px;
       margin-bottom: 12px;
       border: 1px solid #e2e8f0;
-      transition: all 0.2s;
     }
-    .registro-dia:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-color: #cbd5e1; }
     
     .registro-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
     }
-    .registro-fecha { font-weight: 800; color: var(--primary); font-size: 15px;}
+    .registro-fecha { font-weight: 800; color: var(--primary); font-size: 14px;}
+    .registro-cliente { 
+      font-size: 13px; 
+      font-weight: 600; 
+      color: var(--info); 
+      display: block; 
+      margin-bottom: 10px;
+      background: #eff6ff;
+      padding: 4px 10px;
+      border-radius: 8px;
+    }
     .registro-total { background: #d8f3dc; color: var(--primary); padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 800; }
     
     .registro-datos { 
-      font-size: 13px; 
+      font-size: 12px; 
       color: #475569; 
       background: #f8fafc;
       padding: 10px;
@@ -215,7 +230,6 @@
       gap: 8px;
       margin-bottom: 12px;
     }
-    .registro-datos span { display: flex; justify-content: space-between; }
     .registro-datos b { color: var(--secondary); }
 
     .registro-acciones { display: flex; gap: 8px; }
@@ -227,9 +241,7 @@
       cursor: pointer;
       font-size: 12px;
       font-weight: 600;
-      transition: opacity 0.2s;
     }
-    .btn-accion:hover { opacity: 0.8; }
     .btn-editar { background: #e2e8f0; color: #334155; }
     .btn-eliminar { background: #fee2e2; color: var(--danger); }
 
@@ -241,21 +253,31 @@
 
 <div class="app-layout">
   
-  <!-- PANEL IZQUIERDO: Carga y Conteo -->
   <div class="panel panel-principal">
     <h1>📦 Despacho Express</h1>
     
     <div class="acciones-header">
-      <input type="date" id="fechaActual" title="Elegí la fecha del registro">
+      <input type="date" id="fechaActual">
     </div>
 
-    <div class="search-box">
-      <input type="text" id="input" placeholder="Escribí una ciudad..." autocomplete="off">
-      <ul id="sugerencias"></ul>
+    <div class="input-group">
+      <label>Cliente</label>
+      <div class="search-box">
+        <input type="text" id="inputCliente" placeholder="Nombre del cliente o empresa..." autocomplete="off">
+        <ul id="sugerenciasCliente" class="sugerencias-list"></ul>
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label>Zona / Ciudad</label>
+      <div class="search-box">
+        <input type="text" id="inputZona" placeholder="Escribí una ciudad..." autocomplete="off">
+        <ul id="sugerenciasZona" class="sugerencias-list"></ul>
+      </div>
     </div>
 
     <div class="resultado-container">
-      <div class="resultado" id="resultado">Esperando ciudad...</div>
+      <div class="resultado" id="resultado">Esperando datos...</div>
     </div>
 
     <div class="grid-contadores">
@@ -277,16 +299,13 @@
       </div>
     </div>
 
-    <button class="btn btn-guardar" onclick="guardarDia()">💾 Guardar Registro</button>
+    <button class="btn btn-guardar" onclick="guardarRegistro()">💾 Guardar Registro</button>
     <button class="btn btn-reset" onclick="resetear()">🗑️ Limpiar panel</button>
   </div>
 
-  <!-- PANEL DERECHO: Historial -->
   <div class="panel panel-historial">
     <h2>📅 Historial de Despachos</h2>
-    <div id="lista-historial">
-      <!-- Los registros se cargan acá mediante JS -->
-    </div>
+    <div id="lista-historial"></div>
   </div>
 
 </div>
@@ -309,79 +328,95 @@ const zonas = {
   "caba": "CABA"
 };
 
-// Objeto de estado en memoria
+const clientesFrecuentes = ["Mercado Libre", "Adidas", "Nike", "Samsung", "Frávega", "Musimundo", "Personal", "Movistar"];
+
 let contadores = { "GBA 1": 0, "GBA 2": 0, "Zonas Lejanas": 0, "CABA": 0 };
 let currentFocus = -1;
-let filtradas = [];
+let registroEditandoId = null;
 
-const input = document.getElementById("input");
-const sugerencias = document.getElementById("sugerencias");
+const inputZona = document.getElementById("inputZona");
+const sugerenciasZona = document.getElementById("sugerenciasZona");
+const inputCliente = document.getElementById("inputCliente");
+const sugerenciasCliente = document.getElementById("sugerenciasCliente");
 const resultado = document.getElementById("resultado");
 const inputFecha = document.getElementById('fechaActual');
 
-// --- INICIALIZACIÓN ---
 window.onload = () => {
-  // Setear la fecha de hoy por defecto si no hay nada
   inputFecha.valueAsDate = new Date();
   renderizarHistorial();
 };
 
-// --- LÓGICA DE BÚSQUEDA ---
 function normalizar(texto) {
   return texto.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
-input.addEventListener("input", () => {
-  const valor = normalizar(input.value);
-  sugerencias.innerHTML = "";
-  currentFocus = -1; 
-  if (valor === "") return;
-  filtradas = Object.keys(zonas).filter(c => normalizar(c).includes(valor)).slice(0, 5);
-  filtradas.forEach((ciudad, index) => {
-    const li = document.createElement("li");
-    li.textContent = ciudad.toUpperCase();
-    li.setAttribute("id", "sug-" + index);
-    li.onclick = () => seleccionarCiudad(ciudad);
-    sugerencias.appendChild(li);
+// Lógica Genérica de Autocompletado
+function configurarBuscador(inputEl, listaSugerenciasEl, data, callbackSeleccion) {
+  inputEl.addEventListener("input", () => {
+    const valor = normalizar(inputEl.value);
+    listaSugerenciasEl.innerHTML = "";
+    currentFocus = -1;
+    if (valor === "") return;
+
+    const filtrados = Array.isArray(data) 
+      ? data.filter(item => normalizar(item).includes(valor))
+      : Object.keys(data).filter(item => normalizar(item).includes(valor));
+
+    filtrados.slice(0, 5).forEach((item, index) => {
+      const li = document.createElement("li");
+      li.textContent = item.toUpperCase();
+      li.onclick = () => {
+        callbackSeleccion(item);
+        listaSugerenciasEl.innerHTML = "";
+      };
+      listaSugerenciasEl.appendChild(li);
+    });
   });
-});
 
-input.addEventListener("keydown", (e) => {
-  const items = sugerencias.getElementsByTagName("li");
-  if (e.keyCode === 40) { currentFocus++; addActive(items); } 
-  else if (e.keyCode === 38) { currentFocus--; addActive(items); } 
-  else if (e.keyCode === 13) {
-    e.preventDefault();
-    if (currentFocus > -1 && items[currentFocus]) items[currentFocus].click();
-    else if (filtradas.length > 0) seleccionarCiudad(filtradas[0]);
-  }
-});
+  inputEl.addEventListener("keydown", (e) => {
+    const items = listaSugerenciasEl.getElementsByTagName("li");
+    if (e.keyCode === 40) { // Down
+      currentFocus++;
+      resaltarSugerencia(items);
+    } else if (e.keyCode === 38) { // Up
+      currentFocus--;
+      resaltarSugerencia(items);
+    } else if (e.keyCode === 13) { // Enter
+      e.preventDefault();
+      if (currentFocus > -1 && items[currentFocus]) {
+        items[currentFocus].click();
+      } else if (inputEl === inputZona) {
+        // Para zonas, si no hay seleccionado pero hay texto, intentar matchear
+        const valor = normalizar(inputEl.value);
+        const match = Object.keys(zonas).find(z => normalizar(z) === valor);
+        if (match) callbackSeleccion(match);
+      }
+    }
+  });
+}
 
-function addActive(items) {
-  if (!items) return false;
-  removeActive(items);
+function resaltarSugerencia(items) {
+  if (!items.length) return;
+  for (let i = 0; i < items.length; i++) items[i].classList.remove("active");
   if (currentFocus >= items.length) currentFocus = 0;
   if (currentFocus < 0) currentFocus = items.length - 1;
   items[currentFocus].classList.add("active");
-  items[currentFocus].scrollIntoView({ block: "nearest" });
 }
 
-function removeActive(items) {
-  for (let i = 0; i < items.length; i++) items[i].classList.remove("active");
-}
-
-function seleccionarCiudad(ciudad) {
+configurarBuscador(inputZona, sugerenciasZona, zonas, (ciudad) => {
   const zona = zonas[ciudad];
-  resultado.textContent = "Última: " + zona;
   contadores[zona]++;
   actualizarVistaContadores();
-  
-  input.value = ""; 
-  sugerencias.innerHTML = "";
-  input.focus(); 
-}
+  resultado.textContent = `Agregado a ${zona}`;
+  inputZona.value = "";
+  inputZona.focus();
+});
 
-// Actualiza los inputs HTML usando los valores en memoria
+configurarBuscador(inputCliente, sugerenciasCliente, clientesFrecuentes, (cliente) => {
+  inputCliente.value = cliente;
+  inputZona.focus();
+});
+
 function actualizarVistaContadores() {
   document.getElementById("gba1").value = contadores["GBA 1"];
   document.getElementById("gba2").value = contadores["GBA 2"];
@@ -389,7 +424,6 @@ function actualizarVistaContadores() {
   document.getElementById("caba").value = contadores["CABA"];
 }
 
-// Actualiza la memoria leyendo lo que el usuario escribió a mano en los inputs
 function sincronizarContadores() {
   contadores["GBA 1"] = parseInt(document.getElementById("gba1").value) || 0;
   contadores["GBA 2"] = parseInt(document.getElementById("gba2").value) || 0;
@@ -398,120 +432,118 @@ function sincronizarContadores() {
 }
 
 function resetear() {
-  if(confirm("¿Seguro que querés limpiar los números actuales de la pantalla? (Esto no borra el historial)")) {
+  if(confirm("¿Limpiar panel actual?")) {
     contadores = { "GBA 1": 0, "GBA 2": 0, "Zonas Lejanas": 0, "CABA": 0 };
+    inputCliente.value = "";
+    registroEditandoId = null;
     actualizarVistaContadores();
-    resultado.textContent = "Esperando ciudad...";
-    inputFecha.valueAsDate = new Date(); // Resetear fecha a hoy
-    input.focus();
+    resultado.textContent = "Esperando datos...";
+    inputFecha.valueAsDate = new Date();
   }
 }
 
-// --- LÓGICA DE HISTORIAL (LocalStorage) ---
-
-function formatearFecha(fechaYYYYMMDD) {
-  // Convierte "2023-10-25" a "25/10/2023"
-  if (!fechaYYYYMMDD) return "";
-  const partes = fechaYYYYMMDD.split('-');
-  return `${partes[2]}/${partes[1]}/${partes[0]}`;
-}
-
-function guardarDia() {
+function guardarRegistro() {
   const fecha = inputFecha.value;
-  if (!fecha) {
-    alert("Por favor, elegí una fecha en el calendario.");
-    return;
-  }
+  let cliente = inputCliente.value.trim() || "Desconocido";
   
-  // Asegurarnos de que los contadores en memoria estén sincronizados con lo que muestra la pantalla (por si editaron a mano)
+  if (!fecha) return alert("Elegí una fecha.");
+  
   sincronizarContadores();
   
-  let historial = JSON.parse(localStorage.getItem("historialDespachos")) || {};
+  let historial = JSON.parse(localStorage.getItem("historialV4")) || [];
   
-  // Guardamos/Sobreescribimos el registro
-  historial[fecha] = { ...contadores };
-  localStorage.setItem("historialDespachos", JSON.stringify(historial));
-  
-  // Feedback visual sin ser molesto con un alert
-  resultado.textContent = "¡Guardado exitoso!";
-  resultado.style.color = "#40916c";
-  setTimeout(() => {
-    resultado.textContent = "Esperando ciudad...";
-    resultado.style.color = "var(--primary)";
-  }, 2000);
+  const nuevoRegistro = {
+    id: registroEditandoId || Date.now(),
+    fecha,
+    cliente,
+    datos: { ...contadores }
+  };
 
+  if (registroEditandoId) {
+    const idx = historial.findIndex(r => r.id === registroEditandoId);
+    if (idx !== -1) historial[idx] = nuevoRegistro;
+  } else {
+    historial.push(nuevoRegistro);
+  }
+
+  localStorage.setItem("historialV4", JSON.stringify(historial));
+  
+  resultado.textContent = "¡Registro guardado!";
+  registroEditandoId = null;
   renderizarHistorial();
+  
+  // Limpiar solo si no estamos en flujo de edición continua, o podrías resetear todo
+  // resetear(); 
 }
 
 function renderizarHistorial() {
   const contenedor = document.getElementById("lista-historial");
-  const historial = JSON.parse(localStorage.getItem("historialDespachos")) || {};
+  let historial = JSON.parse(localStorage.getItem("historialV4")) || [];
   
   contenedor.innerHTML = "";
-  
-  const fechas = Object.keys(historial).sort().reverse(); // De más nuevo a más viejo
-  
-  if (fechas.length === 0) {
-    contenedor.innerHTML = '<div class="empty-state">No hay registros guardados.<br>Cargá zonas y dale a "Guardar Registro".</div>';
+  historial.sort((a, b) => b.id - a.id);
+
+  if (historial.length === 0) {
+    contenedor.innerHTML = '<div class="empty-state">No hay registros guardados.</div>';
     return;
   }
 
-  fechas.forEach(fecha => {
-    const datos = historial[fecha];
-    const total = datos["GBA 1"] + datos["GBA 2"] + datos["Zonas Lejanas"] + datos["CABA"];
+  historial.forEach(reg => {
+    const d = reg.datos;
+    const total = d["GBA 1"] + d["GBA 2"] + d["Zonas Lejanas"] + d["CABA"];
+    const fechaFmt = reg.fecha.split('-').reverse().join('/');
     
     const div = document.createElement("div");
     div.className = "registro-dia";
     div.innerHTML = `
       <div class="registro-header">
-        <span class="registro-fecha">📅 ${formatearFecha(fecha)}</span>
+        <span class="registro-fecha">📅 ${fechaFmt}</span>
         <span class="registro-total">Total: ${total}</span>
       </div>
+      <span class="registro-cliente">👤 ${reg.cliente}</span>
       <div class="registro-datos">
-        <span>GBA 1: <b>${datos["GBA 1"]}</b></span>
-        <span>GBA 2: <b>${datos["GBA 2"]}</b></span>
-        <span>Lejanas: <b>${datos["Zonas Lejanas"]}</b></span>
-        <span>CABA: <b>${datos["CABA"]}</b></span>
+        <span>GBA 1: <b>${d["GBA 1"]}</b></span>
+        <span>GBA 2: <b>${d["GBA 2"]}</b></span>
+        <span>Lejanas: <b>${d["Zonas Lejanas"]}</b></span>
+        <span>CABA: <b>${d["CABA"]}</b></span>
       </div>
       <div class="registro-acciones">
-        <button class="btn-accion btn-editar" onclick="cargarDia('${fecha}')">✏️ Editar</button>
-        <button class="btn-accion btn-eliminar" onclick="eliminarDia('${fecha}')">❌ Borrar</button>
+        <button class="btn-accion btn-editar" onclick="editarRegistro(${reg.id})">✏️ Editar</button>
+        <button class="btn-accion btn-eliminar" onclick="eliminarRegistro(${reg.id})">❌ Borrar</button>
       </div>
     `;
     contenedor.appendChild(div);
   });
 }
 
-function cargarDia(fecha) {
-  const historial = JSON.parse(localStorage.getItem("historialDespachos")) || {};
-  if (historial[fecha]) {
-    // 1. Cargar datos a la memoria
-    contadores = { ...historial[fecha] };
-    
-    // 2. Cargar datos a la pantalla
+function editarRegistro(id) {
+  const historial = JSON.parse(localStorage.getItem("historialV4")) || [];
+  const reg = historial.find(r => r.id === id);
+  if (reg) {
+    registroEditandoId = reg.id;
+    contadores = { ...reg.datos };
+    inputCliente.value = reg.cliente === "Desconocido" ? "" : reg.cliente;
+    inputFecha.value = reg.fecha;
     actualizarVistaContadores();
-    inputFecha.value = fecha;
-    
     resultado.textContent = "Editando registro...";
-    resultado.style.color = "#e63946"; // Rojo para indicar que estamos editando algo viejo
-    
-    // Scroll arriba en móvil
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 }
 
-function eliminarDia(fecha) {
-  if(confirm(`¿Estás seguro de que querés borrar todo el registro del ${formatearFecha(fecha)}?`)) {
-    let historial = JSON.parse(localStorage.getItem("historialDespachos")) || {};
-    delete historial[fecha];
-    localStorage.setItem("historialDespachos", JSON.stringify(historial));
+function eliminarRegistro(id) {
+  if(confirm("¿Borrar este registro permanentemente?")) {
+    let historial = JSON.parse(localStorage.getItem("historialV4")) || [];
+    historial = historial.filter(r => r.id !== id);
+    localStorage.setItem("historialV4", JSON.stringify(historial));
     renderizarHistorial();
   }
 }
 
-// Ocultar sugerencias al hacer click afuera
 document.addEventListener("click", (e) => {
-  if (e.target !== input) sugerencias.innerHTML = "";
+  if (!e.target.closest('.search-box')) {
+    sugerenciasZona.innerHTML = "";
+    sugerenciasCliente.innerHTML = "";
+  }
 });
 </script>
 
