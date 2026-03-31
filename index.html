@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Zonas de Entrega | v2</title>
+  <title>Zonas de Entrega | v3</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   
   <style>
@@ -21,27 +21,46 @@
       margin: 0;
       display: flex;
       justify-content: center;
-      align-items: center;
+      align-items: flex-start;
       min-height: 100vh;
+      padding: 20px;
       color: #1b4332;
+      box-sizing: border-box;
     }
 
     .container {
       background: var(--glass);
       backdrop-filter: blur(10px);
-      padding: 40px;
+      padding: 30px;
       border-radius: 30px;
       width: 100%;
       max-width: 400px;
       box-shadow: 0 20px 40px rgba(0,0,0,0.3);
       text-align: center;
+      margin-bottom: 20px;
     }
 
-    h1 { font-weight: 800; font-size: 28px; margin-bottom: 25px; }
+    h1 { font-weight: 800; font-size: 26px; margin-bottom: 20px; }
+
+    .acciones-header {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .acciones-header input[type="date"] {
+      flex: 1;
+      padding: 10px;
+      border-radius: 12px;
+      border: 2px solid #e0e0e0;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      color: var(--primary);
+    }
 
     .search-box { position: relative; margin-bottom: 20px; }
 
-    input {
+    input[type="text"] {
       width: 100%;
       padding: 15px 20px;
       border-radius: 15px;
@@ -52,7 +71,7 @@
       transition: all 0.3s ease;
     }
 
-    input:focus { border-color: var(--secondary); }
+    input[type="text"]:focus { border-color: var(--secondary); }
 
     ul {
       list-style: none;
@@ -77,7 +96,6 @@
       border-bottom: 1px solid #f0f0f0;
     }
 
-    /* Clase para el elemento seleccionado con flechas */
     li.active, li:hover {
       background: #d8f3dc;
       color: var(--primary);
@@ -85,14 +103,14 @@
       padding-left: 25px;
     }
 
-    .resultado-container { min-height: 60px; margin-bottom: 20px; }
-    .resultado { font-size: 22px; font-weight: 800; color: var(--primary); }
+    .resultado-container { min-height: 40px; margin-bottom: 15px; }
+    .resultado { font-size: 20px; font-weight: 800; color: var(--primary); }
 
     .grid-contadores {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 15px;
-      margin-top: 25px;
+      margin-top: 15px;
     }
 
     .card-contador {
@@ -100,21 +118,74 @@
       padding: 15px;
       border-radius: 18px;
       border: 1px solid #eee;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
-    .card-label { font-size: 12px; font-weight: 600; color: #666; display: block; }
-    .card-value { font-size: 20px; font-weight: 800; color: var(--secondary); }
+    .card-label { font-size: 12px; font-weight: 600; color: #666; }
+    .card-value { font-size: 22px; font-weight: 800; color: var(--secondary); margin-top: 5px; width: 100%; border: none; background: transparent; text-align: center;}
+    .card-value:focus { outline: none; border-bottom: 2px solid var(--secondary); }
 
-    .btn-reset {
-      margin-top: 30px;
+    .btn {
       width: 100%;
       padding: 12px;
       border: none;
       border-radius: 15px;
-      background: var(--primary);
-      color: white;
       font-weight: 600;
       cursor: pointer;
+      margin-top: 10px;
+      transition: opacity 0.2s;
+    }
+    .btn:hover { opacity: 0.9; }
+    
+    .btn-guardar { background: var(--secondary); color: white; margin-top: 20px;}
+    .btn-historial { background: #e9ecef; color: #333; }
+    .btn-reset { background: #ff4d4d; color: white; }
+
+    /* Estilos del Historial */
+    #panel-historial {
+      display: none;
+      margin-top: 20px;
+      background: rgba(255,255,255,0.9);
+      border-radius: 20px;
+      padding: 20px;
+      text-align: left;
+    }
+    .registro-dia {
+      background: white;
+      padding: 15px;
+      border-radius: 12px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+    }
+    .registro-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 800;
+      margin-bottom: 10px;
+      color: var(--primary);
+    }
+    .registro-datos { font-size: 14px; color: #555; }
+    .btn-cargar {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .btn-eliminar {
+      background: #ff4d4d;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12px;
+      margin-left: 5px;
     }
   </style>
 </head>
@@ -123,6 +194,10 @@
 <div class="container">
   <h1>📦 Despacho Express</h1>
   
+  <div class="acciones-header">
+    <input type="date" id="fechaActual">
+  </div>
+
   <div class="search-box">
     <input type="text" id="input" placeholder="Escribí una ciudad..." autocomplete="off">
     <ul id="sugerencias"></ul>
@@ -133,13 +208,21 @@
   </div>
 
   <div class="grid-contadores">
-    <div class="card-contador"><span class="card-label">GBA 1</span><span class="card-value" id="gba1">0</span></div>
-    <div class="card-contador"><span class="card-label">GBA 2</span><span class="card-value" id="gba2">0</span></div>
-    <div class="card-contador"><span class="card-label">Lejanas</span><span class="card-value" id="lejanas">0</span></div>
-    <div class="card-contador"><span class="card-label">CABA</span><span class="card-value" id="caba">0</span></div>
+    <div class="card-contador"><span class="card-label">GBA 1</span><input type="number" class="card-value" id="gba1" value="0" min="0" onchange="actualizarDesdeInput('GBA 1', this.value)"></div>
+    <div class="card-contador"><span class="card-label">GBA 2</span><input type="number" class="card-value" id="gba2" value="0" min="0" onchange="actualizarDesdeInput('GBA 2', this.value)"></div>
+    <div class="card-contador"><span class="card-label">Lejanas</span><input type="number" class="card-value" id="lejanas" value="0" min="0" onchange="actualizarDesdeInput('Zonas Lejanas', this.value)"></div>
+    <div class="card-contador"><span class="card-label">CABA</span><input type="number" class="card-value" id="caba" value="0" min="0" onchange="actualizarDesdeInput('CABA', this.value)"></div>
   </div>
 
-  <button class="btn-reset" onclick="resetear()">Reiniciar sesión</button>
+  <button class="btn btn-guardar" onclick="guardarDia()">💾 Guardar Día</button>
+  <button class="btn btn-historial" onclick="toggleHistorial()">📅 Ver Historial</button>
+  <button class="btn btn-reset" onclick="resetear()">🗑️ Limpiar contadores actuales</button>
+
+  <div id="panel-historial">
+    <h3 style="margin-top:0; color: var(--primary);">Historial de Despachos</h3>
+    <div id="lista-historial"></div>
+  </div>
+
 </div>
 
 <script>
@@ -160,9 +243,12 @@ const zonas = {
   "caba": "CABA"
 };
 
-const contadores = { "GBA 1": 0, "GBA 2": 0, "Zonas Lejanas": 0, "CABA": 0 };
-let currentFocus = -1; // Para rastrear la posición en la lista
+let contadores = { "GBA 1": 0, "GBA 2": 0, "Zonas Lejanas": 0, "CABA": 0 };
+let currentFocus = -1;
 let filtradas = [];
+
+// Inicializar fecha de hoy
+document.getElementById('fechaActual').valueAsDate = new Date();
 
 const input = document.getElementById("input");
 const sugerencias = document.getElementById("sugerencias");
@@ -172,15 +258,13 @@ function normalizar(texto) {
   return texto.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
+// Lógica de búsqueda original (intacta)
 input.addEventListener("input", () => {
   const valor = normalizar(input.value);
   sugerencias.innerHTML = "";
   currentFocus = -1; 
-  
   if (valor === "") return;
-
   filtradas = Object.keys(zonas).filter(c => normalizar(c).includes(valor)).slice(0, 5);
-
   filtradas.forEach((ciudad, index) => {
     const li = document.createElement("li");
     li.textContent = ciudad.toUpperCase();
@@ -190,24 +274,14 @@ input.addEventListener("input", () => {
   });
 });
 
-// NUEVO: Manejo de teclado (Flechas y Enter)
 input.addEventListener("keydown", (e) => {
   const items = sugerencias.getElementsByTagName("li");
-  
-  if (e.keyCode === 40) { // Flecha ABAJO
-    currentFocus++;
-    addActive(items);
-  } else if (e.keyCode === 38) { // Flecha ARRIBA
-    currentFocus--;
-    addActive(items);
-  } else if (e.keyCode === 13) { // Tecla ENTER
+  if (e.keyCode === 40) { currentFocus++; addActive(items); } 
+  else if (e.keyCode === 38) { currentFocus--; addActive(items); } 
+  else if (e.keyCode === 13) {
     e.preventDefault();
-    if (currentFocus > -1 && items[currentFocus]) {
-      items[currentFocus].click();
-    } else if (filtradas.length > 0) {
-      // Si no hay nada resaltado pero hay resultados, elige el primero
-      seleccionarCiudad(filtradas[0]);
-    }
+    if (currentFocus > -1 && items[currentFocus]) items[currentFocus].click();
+    else if (filtradas.length > 0) seleccionarCiudad(filtradas[0]);
   }
 });
 
@@ -221,38 +295,127 @@ function addActive(items) {
 }
 
 function removeActive(items) {
-  for (let i = 0; i < items.length; i++) {
-    items[i].classList.remove("active");
-  }
+  for (let i = 0; i < items.length; i++) items[i].classList.remove("active");
 }
 
 function seleccionarCiudad(ciudad) {
   const zona = zonas[ciudad];
-  resultado.textContent = "Zona: " + zona;
-  
+  resultado.textContent = "Última: " + zona;
   contadores[zona]++;
-  actualizarContadores();
-  
-  // Limpiar buscador para la siguiente carga
+  actualizarVistaContadores();
   input.value = ""; 
   sugerencias.innerHTML = "";
   input.focus(); 
 }
 
-function actualizarContadores() {
-  document.getElementById("gba1").textContent = contadores["GBA 1"];
-  document.getElementById("gba2").textContent = contadores["GBA 2"];
-  document.getElementById("lejanas").textContent = contadores["Zonas Lejanas"];
-  document.getElementById("caba").textContent = contadores["CABA"];
+function actualizarVistaContadores() {
+  document.getElementById("gba1").value = contadores["GBA 1"];
+  document.getElementById("gba2").value = contadores["GBA 2"];
+  document.getElementById("lejanas").value = contadores["Zonas Lejanas"];
+  document.getElementById("caba").value = contadores["CABA"];
+}
+
+function actualizarDesdeInput(zona, valor) {
+  contadores[zona] = parseInt(valor) || 0;
 }
 
 function resetear() {
-  for (let zona in contadores) contadores[zona] = 0;
-  actualizarContadores();
-  resultado.textContent = "Esperando ciudad...";
-  input.focus();
+  if(confirm("¿Seguro que querés reiniciar los contadores de la vista actual? (No borra el historial)")) {
+    contadores = { "GBA 1": 0, "GBA 2": 0, "Zonas Lejanas": 0, "CABA": 0 };
+    actualizarVistaContadores();
+    resultado.textContent = "Esperando ciudad...";
+    input.focus();
+  }
 }
 
+// --- NUEVA LÓGICA DE HISTORIAL (LocalStorage) ---
+
+function guardarDia() {
+  const fecha = document.getElementById("fechaActual").value;
+  if (!fecha) return alert("Por favor, elegí una fecha.");
+  
+  // Obtener historial existente o crear uno nuevo
+  let historial = JSON.parse(localStorage.getItem("historialDespachos")) || {};
+  
+  // Guardar una copia de los contadores actuales en esa fecha
+  historial[fecha] = { ...contadores };
+  
+  // Guardar de vuelta en localStorage
+  localStorage.setItem("historialDespachos", JSON.stringify(historial));
+  
+  alert(`¡Datos del día ${fecha} guardados exitosamente!`);
+  renderizarHistorial(); // Actualizar la lista si está abierta
+}
+
+function toggleHistorial() {
+  const panel = document.getElementById("panel-historial");
+  if (panel.style.display === "block") {
+    panel.style.display = "none";
+  } else {
+    panel.style.display = "block";
+    renderizarHistorial();
+  }
+}
+
+function renderizarHistorial() {
+  const contenedor = document.getElementById("lista-historial");
+  const historial = JSON.parse(localStorage.getItem("historialDespachos")) || {};
+  
+  contenedor.innerHTML = "";
+  
+  const fechas = Object.keys(historial).sort().reverse(); // Ordenar de más nuevo a más viejo
+  
+  if (fechas.length === 0) {
+    contenedor.innerHTML = "<p style='font-size: 14px; color: #666;'>No hay días guardados todavía.</p>";
+    return;
+  }
+
+  fechas.forEach(fecha => {
+    const datos = historial[fecha];
+    const total = datos["GBA 1"] + datos["GBA 2"] + datos["Zonas Lejanas"] + datos["CABA"];
+    
+    // Formatear fecha para lectura en Argentina (DD/MM/YYYY)
+    const fechaFormat = fecha.split('-').reverse().join('/');
+
+    const div = document.createElement("div");
+    div.className = "registro-dia";
+    div.innerHTML = `
+      <div class="registro-header">
+        <span>📅 ${fechaFormat} (Total: ${total})</span>
+        <div>
+          <button class="btn-cargar" onclick="cargarDia('${fecha}')">✏️ Editar</button>
+          <button class="btn-eliminar" onclick="eliminarDia('${fecha}')">❌</button>
+        </div>
+      </div>
+      <div class="registro-datos">
+        GBA1: <b>${datos["GBA 1"]}</b> | GBA2: <b>${datos["GBA 2"]}</b> | Lejanas: <b>${datos["Zonas Lejanas"]}</b> | CABA: <b>${datos["CABA"]}</b>
+      </div>
+    `;
+    contenedor.appendChild(div);
+  });
+}
+
+function cargarDia(fecha) {
+  const historial = JSON.parse(localStorage.getItem("historialDespachos")) || {};
+  if (historial[fecha]) {
+    contadores = { ...historial[fecha] };
+    document.getElementById("fechaActual").value = fecha;
+    actualizarVistaContadores();
+    resultado.textContent = "Editando registro...";
+    alert(`Día ${fecha} cargado. Hacé los cambios y volvé a presionar "Guardar Día" para sobreescribirlo.`);
+  }
+}
+
+function eliminarDia(fecha) {
+  if(confirm(`¿Estás seguro de que querés borrar el registro del día ${fecha}?`)) {
+    let historial = JSON.parse(localStorage.getItem("historialDespachos")) || {};
+    delete historial[fecha];
+    localStorage.setItem("historialDespachos", JSON.stringify(historial));
+    renderizarHistorial();
+  }
+}
+
+// Ocultar sugerencias al hacer click afuera
 document.addEventListener("click", (e) => {
   if (e.target !== input) sugerencias.innerHTML = "";
 });
