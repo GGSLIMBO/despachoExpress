@@ -375,18 +375,26 @@ function configurarBuscador(inputEl, listaSugerenciasEl, data, callbackSeleccion
 
   inputEl.addEventListener("keydown", (e) => {
     const items = listaSugerenciasEl.getElementsByTagName("li");
-    if (e.keyCode === 40) { // Down
+    
+    if (e.keyCode === 40) { // Abajo
       currentFocus++;
       resaltarSugerencia(items);
-    } else if (e.keyCode === 38) { // Up
+    } else if (e.keyCode === 38) { // Arriba
       currentFocus--;
       resaltarSugerencia(items);
     } else if (e.keyCode === 13) { // Enter
       e.preventDefault();
+      
+      // 1. Si hay un item resaltado con las flechas, elegirlo
       if (currentFocus > -1 && items[currentFocus]) {
         items[currentFocus].click();
-      } else if (inputEl === inputZona) {
-        // Para zonas, si no hay seleccionado pero hay texto, intentar matchear
+      } 
+      // 2. Si no hay nada resaltado pero hay items en la lista, elegir el primero automáticamente
+      else if (items.length > 0) {
+        items[0].click();
+      }
+      // 3. En el caso específico de zonas, si no hay lista pero coincide exacto el texto
+      else if (inputEl === inputZona) {
         const valor = normalizar(inputEl.value);
         const match = Object.keys(zonas).find(z => normalizar(z) === valor);
         if (match) callbackSeleccion(match);
@@ -394,6 +402,7 @@ function configurarBuscador(inputEl, listaSugerenciasEl, data, callbackSeleccion
     }
   });
 }
+
 
 function resaltarSugerencia(items) {
   if (!items.length) return;
