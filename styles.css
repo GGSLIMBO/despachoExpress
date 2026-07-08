@@ -20,11 +20,10 @@ body {
 
 .app-layout {
   display: flex;
-  flex-wrap: wrap;
   gap: 25px;
   justify-content: center;
   align-items: flex-start;
-  max-width: 1100px;
+  max-width: 1200px;
   margin: 0 auto;
 }
 
@@ -33,13 +32,22 @@ body {
   backdrop-filter: blur(10px);
   padding: 30px;
   border-radius: 30px;
-  width: 100%;
   box-shadow: 0 20px 40px rgba(0,0,0,0.3);
 }
 
-.panel-principal { max-width: 450px; text-align: center; }
-.panel-historial { max-width: 450px; max-height: 85vh; overflow-y: auto; }
-.panel-import { max-width: 300px; }
+/* Desktop layout: three columns, counter centered */
+.panel-import { order: 1; flex: 0 0 260px; }
+.panel-principal { order: 2; flex: 0 0 460px; text-align: center; }
+.panel-historial { order: 3; flex: 0 0 360px; max-height: 85vh; overflow-y: auto; }
+
+/* Mobile: stack vertically with panel-principal first */
+@media (max-width: 700px) {
+  .app-layout { flex-direction: column; padding: 18px; }
+  .panel-principal { order: 1; }
+  .panel-import { order: 2; }
+  .panel-historial { order: 3; }
+  .panel-principal, .panel-import, .panel-historial { width: 100%; }
+}
 
 .panel-historial::-webkit-scrollbar { width: 8px; }
 .panel-historial::-webkit-scrollbar-track { background: transparent; }
