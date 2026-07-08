@@ -6,252 +6,29 @@
   <title>Zonas de Entrega | v4</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   
-  <style>
-    :root {
-      --primary: #2d6a4f;
-      --secondary: #40916c;
-      --accent: #74c69d;
-      --bg-gradient: linear-gradient(135deg, #1b4332 0%, #2d6a4f 100%);
-      --glass: rgba(255, 255, 255, 0.95);
-      --danger: #e63946;
-      --info: #3a86ff;
-    }
-
-    body {
-      font-family: 'Inter', sans-serif;
-      background: var(--bg-gradient);
-      margin: 0;
-      min-height: 100vh;
-      color: #1b4332;
-      box-sizing: border-box;
-      padding: 30px 20px;
-    }
-
-    .app-layout {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 25px;
-      justify-content: center;
-      align-items: flex-start;
-      max-width: 1100px;
-      margin: 0 auto;
-    }
-
-    .panel {
-      background: var(--glass);
-      backdrop-filter: blur(10px);
-      padding: 30px;
-      border-radius: 30px;
-      width: 100%;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-      box-sizing: border-box;
-    }
-
-    .panel-principal { max-width: 450px; text-align: center; }
-    .panel-historial { max-width: 450px; max-height: 85vh; overflow-y: auto; }
-
-    .panel-historial::-webkit-scrollbar { width: 8px; }
-    .panel-historial::-webkit-scrollbar-track { background: transparent; }
-    .panel-historial::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-
-    h1, h2 { font-weight: 800; margin-top: 0; }
-    h1 { font-size: 24px; margin-bottom: 20px; }
-    h2 { font-size: 20px; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-
-    .acciones-header {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-
-    .acciones-header input[type="date"] {
-      flex: 1;
-      padding: 12px;
-      border-radius: 12px;
-      border: 2px solid #e0e0e0;
-      font-family: 'Inter', sans-serif;
-      font-weight: 600;
-      color: var(--primary);
-      outline: none;
-    }
-
-    .input-group {
-      margin-bottom: 15px;
-      text-align: left;
-    }
-
-    .input-group label {
-      display: block;
-      font-size: 12px;
-      font-weight: 700;
-      margin-bottom: 5px;
-      margin-left: 5px;
-      color: var(--secondary);
-      text-transform: uppercase;
-    }
-
-    .search-box { position: relative; }
-
-    input[type="text"] {
-      width: 100%;
-      padding: 12px 15px;
-      border-radius: 12px;
-      border: 2px solid #e0e0e0;
-      outline: none;
-      font-size: 15px;
-      box-sizing: border-box;
-      transition: all 0.3s ease;
-    }
-
-    input[type="text"]:focus { border-color: var(--secondary); }
-
-    .sugerencias-list {
-      list-style: none;
-      padding: 0;
-      margin: 5px 0;
-      position: absolute;
-      width: 100%;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-      z-index: 100;
-      max-height: 180px;
-      overflow-y: auto;
-      border: 1px solid #eee;
-    }
-
-    .sugerencias-list li {
-      padding: 10px 15px;
-      cursor: pointer;
-      text-align: left;
-      transition: all 0.2s;
-      border-bottom: 1px solid #f0f0f0;
-      font-size: 14px;
-    }
-
-    .sugerencias-list li.active, .sugerencias-list li:hover {
-      background: #d8f3dc;
-      color: var(--primary);
-      font-weight: 600;
-    }
-
-    .resultado-container { min-height: 30px; margin-bottom: 10px; }
-    .resultado { font-size: 16px; font-weight: 800; color: var(--primary); }
-
-    .grid-contadores {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-top: 10px;
-    }
-
-    .card-contador {
-      background: #f8f9fa;
-      padding: 12px;
-      border-radius: 15px;
-      border: 1px solid #eee;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    .card-label { font-size: 11px; font-weight: 700; color: #666; }
-    
-    .card-value { 
-      font-size: 22px; 
-      font-weight: 800; 
-      color: var(--secondary); 
-      margin-top: 5px; 
-      width: 100%; 
-      border: none; 
-      background: transparent; 
-      text-align: center;
-      font-family: 'Inter', sans-serif;
-    }
-    .card-value:focus { outline: none; }
-    .card-value::-webkit-inner-spin-button, .card-value::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-
-    .btn {
-      width: 100%;
-      padding: 14px;
-      border: none;
-      border-radius: 15px;
-      font-weight: 700;
-      font-size: 15px;
-      cursor: pointer;
-      margin-top: 10px;
-      transition: all 0.2s;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 8px;
-    }
-    .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-    
-    .btn-guardar { background: var(--secondary); color: white; margin-top: 20px;}
-    .btn-reset { background: transparent; color: var(--danger); border: 2px solid var(--danger); margin-top: 10px; }
-    .btn-reset:hover { background: var(--danger); color: white; }
-
-    .registro-dia {
-      background: white;
-      padding: 16px;
-      border-radius: 16px;
-      margin-bottom: 12px;
-      border: 1px solid #e2e8f0;
-    }
-    
-    .registro-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-    }
-    .registro-fecha { font-weight: 800; color: var(--primary); font-size: 14px;}
-    .registro-cliente { 
-      font-size: 13px; 
-      font-weight: 600; 
-      color: var(--info); 
-      display: block; 
-      margin-bottom: 10px;
-      background: #eff6ff;
-      padding: 4px 10px;
-      border-radius: 8px;
-    }
-    .registro-total { background: #d8f3dc; color: var(--primary); padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 800; }
-    
-    .registro-datos { 
-      font-size: 12px; 
-      color: #475569; 
-      background: #f8fafc;
-      padding: 10px;
-      border-radius: 10px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-    .registro-datos b { color: var(--secondary); }
-
-    .registro-acciones { display: flex; gap: 8px; }
-    .btn-accion {
-      flex: 1;
-      border: none;
-      padding: 8px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: 600;
-    }
-    .btn-editar { background: #e2e8f0; color: #334155; }
-    .btn-eliminar { background: #fee2e2; color: var(--danger); }
-
-    .empty-state { text-align: center; color: #64748b; font-size: 14px; padding: 20px 0; }
-
-  </style>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 </head>
 <body>
 
 <div class="app-layout">
+
+  <div class="panel panel-import">
+    <h2>📥 Importar PDF</h2>
+    <div class="input-group">
+      <label>Seleccionar archivo PDF</label>
+      <input type="file" id="pdfInput" accept="application/pdf">
+    </div>
+    <button class="btn" id="analizarPdfBtn">🔎 Analizar PDF</button>
+    <div class="input-group">
+      <label>Estado</label>
+      <div id="pdfEstado" class="resultado">Esperando archivo...</div>
+    </div>
+    <div class="input-group">
+      <label>Resultados</label>
+      <div id="pdfResultados" class="registro-datos" style="display:block; min-height:60px;"></div>
+    </div>
+  </div>
   
   <div class="panel panel-principal">
     <h1>📦 Despacho Express</h1>
@@ -283,24 +60,24 @@
     <div class="grid-contadores">
       <div class="card-contador">
         <span class="card-label">GBA 1</span>
-        <input type="number" class="card-value" id="gba1" value="0" min="0" onchange="sincronizarContadores()">
+        <input type="number" class="card-value" id="gba1" value="0" min="0">
       </div>
       <div class="card-contador">
         <span class="card-label">GBA 2</span>
-        <input type="number" class="card-value" id="gba2" value="0" min="0" onchange="sincronizarContadores()">
+        <input type="number" class="card-value" id="gba2" value="0" min="0">
       </div>
       <div class="card-contador">
         <span class="card-label">Lejanas</span>
-        <input type="number" class="card-value" id="lejanas" value="0" min="0" onchange="sincronizarContadores()">
+        <input type="number" class="card-value" id="lejanas" value="0" min="0">
       </div>
       <div class="card-contador">
         <span class="card-label">CABA</span>
-        <input type="number" class="card-value" id="caba" value="0" min="0" onchange="sincronizarContadores()">
+        <input type="number" class="card-value" id="caba" value="0" min="0">
       </div>
     </div>
 
-    <button class="btn btn-guardar" onclick="guardarRegistro()">💾 Guardar Registro</button>
-    <button class="btn btn-reset" onclick="resetear()">🗑️ Limpiar panel</button>
+    <button class="btn btn-guardar" id="guardarBtn">💾 Guardar Registro</button>
+    <button class="btn btn-reset" id="resetBtn">🗑️ Limpiar panel</button>
   </div>
 
   <div class="panel panel-historial">
@@ -310,251 +87,7 @@
 
 </div>
 
-<script>
-const zonas = {
-  "san isidro": "GBA 1", "vicente lopez": "GBA 1", "san martin": "GBA 1", "tres de febrero": "GBA 1",
-  "hurlingham": "GBA 1", "moron": "GBA 1", "ituzaingo": "GBA 1", "la matanza norte": "GBA 1",
-  "lomas de zamora": "GBA 1", "lanus": "GBA 1", "avellaneda": "GBA 1",
-  "tigre": "GBA 2", "san fernando": "GBA 2", "malvinas argentinas": "GBA 2", "jose c paz": "GBA 2",
-  "san miguel": "GBA 2", "moreno": "GBA 2", "merlo": "GBA 2", "la matanza sur": "GBA 2",
-  "ezeiza": "GBA 2", "esteban echeverria": "GBA 2", "almirante brown": "GBA 2", "quilmes": "GBA 2",
-  "florencio varela": "GBA 2", "berazategui": "GBA 2",
-  "zarate": "Zonas Lejanas", "campana": "Zonas Lejanas", "escobar": "Zonas Lejanas", "villa rosa": "Zonas Lejanas",
-  "del viso": "Zonas Lejanas", "garin": "Zonas Lejanas", "derqui": "Zonas Lejanas", "pilar": "Zonas Lejanas",
-  "ingeniero maschwitz": "Zonas Lejanas", "lujan": "Zonas Lejanas", "general rodriguez": "Zonas Lejanas",
-  "marcos paz": "Zonas Lejanas", "cañuelas": "Zonas Lejanas", "san vicente": "Zonas Lejanas",
-  "guernica": "Zonas Lejanas", "ensenada": "Zonas Lejanas", "berisso": "Zonas Lejanas",
-  "la plata norte": "Zonas Lejanas", "la plata oeste": "Zonas Lejanas", "la plata centro": "Zonas Lejanas",
-  "caba": "CABA"
-};
-
-const clientesFrecuentes = ["Awatto", "Kar Pe", "Bookin"];
-
-let contadores = { "GBA 1": 0, "GBA 2": 0, "Zonas Lejanas": 0, "CABA": 0 };
-let currentFocus = -1;
-let registroEditandoId = null;
-
-const inputZona = document.getElementById("inputZona");
-const sugerenciasZona = document.getElementById("sugerenciasZona");
-const inputCliente = document.getElementById("inputCliente");
-const sugerenciasCliente = document.getElementById("sugerenciasCliente");
-const resultado = document.getElementById("resultado");
-const inputFecha = document.getElementById('fechaActual');
-
-window.onload = () => {
-  inputFecha.valueAsDate = new Date();
-  renderizarHistorial();
-};
-
-function normalizar(texto) {
-  return texto.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-}
-
-// Lógica Genérica de Autocompletado
-function configurarBuscador(inputEl, listaSugerenciasEl, data, callbackSeleccion) {
-  inputEl.addEventListener("input", () => {
-    const valor = normalizar(inputEl.value);
-    listaSugerenciasEl.innerHTML = "";
-    currentFocus = -1;
-    if (valor === "") return;
-
-    const filtrados = Array.isArray(data) 
-      ? data.filter(item => normalizar(item).includes(valor))
-      : Object.keys(data).filter(item => normalizar(item).includes(valor));
-
-    filtrados.slice(0, 5).forEach((item, index) => {
-      const li = document.createElement("li");
-      li.textContent = item.toUpperCase();
-      li.onclick = () => {
-        callbackSeleccion(item);
-        listaSugerenciasEl.innerHTML = "";
-      };
-      listaSugerenciasEl.appendChild(li);
-    });
-  });
-
-  inputEl.addEventListener("keydown", (e) => {
-    const items = listaSugerenciasEl.getElementsByTagName("li");
-    
-    if (e.keyCode === 40) { // Abajo
-      currentFocus++;
-      resaltarSugerencia(items);
-    } else if (e.keyCode === 38) { // Arriba
-      currentFocus--;
-      resaltarSugerencia(items);
-    } else if (e.keyCode === 13) { // Enter
-      e.preventDefault();
-      
-      // 1. Si hay un item resaltado con las flechas, elegirlo
-      if (currentFocus > -1 && items[currentFocus]) {
-        items[currentFocus].click();
-      } 
-      // 2. Si no hay nada resaltado pero hay items en la lista, elegir el primero automáticamente
-      else if (items.length > 0) {
-        items[0].click();
-      }
-      // 3. En el caso específico de zonas, si no hay lista pero coincide exacto el texto
-      else if (inputEl === inputZona) {
-        const valor = normalizar(inputEl.value);
-        const match = Object.keys(zonas).find(z => normalizar(z) === valor);
-        if (match) callbackSeleccion(match);
-      }
-    }
-  });
-}
-
-
-function resaltarSugerencia(items) {
-  if (!items.length) return;
-  for (let i = 0; i < items.length; i++) items[i].classList.remove("active");
-  if (currentFocus >= items.length) currentFocus = 0;
-  if (currentFocus < 0) currentFocus = items.length - 1;
-  items[currentFocus].classList.add("active");
-}
-
-configurarBuscador(inputZona, sugerenciasZona, zonas, (ciudad) => {
-  const zona = zonas[ciudad];
-  contadores[zona]++;
-  actualizarVistaContadores();
-  resultado.textContent = `Agregado a ${zona}`;
-  inputZona.value = "";
-  inputZona.focus();
-});
-
-configurarBuscador(inputCliente, sugerenciasCliente, clientesFrecuentes, (cliente) => {
-  inputCliente.value = cliente;
-  inputZona.focus();
-});
-
-function actualizarVistaContadores() {
-  document.getElementById("gba1").value = contadores["GBA 1"];
-  document.getElementById("gba2").value = contadores["GBA 2"];
-  document.getElementById("lejanas").value = contadores["Zonas Lejanas"];
-  document.getElementById("caba").value = contadores["CABA"];
-}
-
-function sincronizarContadores() {
-  contadores["GBA 1"] = parseInt(document.getElementById("gba1").value) || 0;
-  contadores["GBA 2"] = parseInt(document.getElementById("gba2").value) || 0;
-  contadores["Zonas Lejanas"] = parseInt(document.getElementById("lejanas").value) || 0;
-  contadores["CABA"] = parseInt(document.getElementById("caba").value) || 0;
-}
-
-function resetear() {
-  if(confirm("¿Limpiar panel actual?")) {
-    contadores = { "GBA 1": 0, "GBA 2": 0, "Zonas Lejanas": 0, "CABA": 0 };
-    inputCliente.value = "";
-    registroEditandoId = null;
-    actualizarVistaContadores();
-    resultado.textContent = "Esperando datos...";
-    inputFecha.valueAsDate = new Date();
-  }
-}
-
-function guardarRegistro() {
-  const fecha = inputFecha.value;
-  let cliente = inputCliente.value.trim() || "Desconocido";
-  
-  if (!fecha) return alert("Elegí una fecha.");
-  
-  sincronizarContadores();
-  
-  let historial = JSON.parse(localStorage.getItem("historialV4")) || [];
-  
-  const nuevoRegistro = {
-    id: registroEditandoId || Date.now(),
-    fecha,
-    cliente,
-    datos: { ...contadores }
-  };
-
-  if (registroEditandoId) {
-    const idx = historial.findIndex(r => r.id === registroEditandoId);
-    if (idx !== -1) historial[idx] = nuevoRegistro;
-  } else {
-    historial.push(nuevoRegistro);
-  }
-
-  localStorage.setItem("historialV4", JSON.stringify(historial));
-  
-  resultado.textContent = "¡Registro guardado!";
-  registroEditandoId = null;
-  renderizarHistorial();
-  
-  // Limpiar solo si no estamos en flujo de edición continua, o podrías resetear todo
-  // resetear(); 
-}
-
-function renderizarHistorial() {
-  const contenedor = document.getElementById("lista-historial");
-  let historial = JSON.parse(localStorage.getItem("historialV4")) || [];
-  
-  contenedor.innerHTML = "";
-  historial.sort((a, b) => b.id - a.id);
-
-  if (historial.length === 0) {
-    contenedor.innerHTML = '<div class="empty-state">No hay registros guardados.</div>';
-    return;
-  }
-
-  historial.forEach(reg => {
-    const d = reg.datos;
-    const total = d["GBA 1"] + d["GBA 2"] + d["Zonas Lejanas"] + d["CABA"];
-    const fechaFmt = reg.fecha.split('-').reverse().join('/');
-    
-    const div = document.createElement("div");
-    div.className = "registro-dia";
-    div.innerHTML = `
-      <div class="registro-header">
-        <span class="registro-fecha">📅 ${fechaFmt}</span>
-        <span class="registro-total">Total: ${total}</span>
-      </div>
-      <span class="registro-cliente">👤 ${reg.cliente}</span>
-      <div class="registro-datos">
-        <span>GBA 1: <b>${d["GBA 1"]}</b></span>
-        <span>GBA 2: <b>${d["GBA 2"]}</b></span>
-        <span>Lejanas: <b>${d["Zonas Lejanas"]}</b></span>
-        <span>CABA: <b>${d["CABA"]}</b></span>
-      </div>
-      <div class="registro-acciones">
-        <button class="btn-accion btn-editar" onclick="editarRegistro(${reg.id})">✏️ Editar</button>
-        <button class="btn-accion btn-eliminar" onclick="eliminarRegistro(${reg.id})">❌ Borrar</button>
-      </div>
-    `;
-    contenedor.appendChild(div);
-  });
-}
-
-function editarRegistro(id) {
-  const historial = JSON.parse(localStorage.getItem("historialV4")) || [];
-  const reg = historial.find(r => r.id === id);
-  if (reg) {
-    registroEditandoId = reg.id;
-    contadores = { ...reg.datos };
-    inputCliente.value = reg.cliente === "Desconocido" ? "" : reg.cliente;
-    inputFecha.value = reg.fecha;
-    actualizarVistaContadores();
-    resultado.textContent = "Editando registro...";
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-}
-
-function eliminarRegistro(id) {
-  if(confirm("¿Borrar este registro permanentemente?")) {
-    let historial = JSON.parse(localStorage.getItem("historialV4")) || [];
-    historial = historial.filter(r => r.id !== id);
-    localStorage.setItem("historialV4", JSON.stringify(historial));
-    renderizarHistorial();
-  }
-}
-
-document.addEventListener("click", (e) => {
-  if (!e.target.closest('.search-box')) {
-    sugerenciasZona.innerHTML = "";
-    sugerenciasCliente.innerHTML = "";
-  }
-});
-</script>
+<script type="module" src="app.js"></script>
 
 </body>
 </html>
