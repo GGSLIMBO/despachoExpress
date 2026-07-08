@@ -41,7 +41,12 @@ function attachListeners() {
     const zona = zonas[ciudad];
     contadores[zona] = (contadores[zona] || 0) + 1;
     actualizarVistaContadores();
-    refs.resultado.textContent = `Agregado a ${zona}`;
+    
+    // Mostrar feedback visual mejorado
+    refs.resultado.textContent = `✓ ${ciudad} agregado a ${zona}`;
+    refs.resultado.classList.add('success');
+    setTimeout(() => refs.resultado.classList.remove('success'), 1500);
+    
     refs.inputZona.value = '';
     refs.inputZona.focus();
   });
@@ -62,7 +67,9 @@ function attachListeners() {
       refs.inputCliente.value = '';
       registroEditandoId = null;
       actualizarVistaContadores();
-      refs.resultado.textContent = 'Esperando datos...';
+      refs.resultado.textContent = '↻ Panel limpiado';
+      refs.resetBtn.style.transform = 'rotate(-180deg)';
+      setTimeout(() => refs.resetBtn.style.transform = 'rotate(0)', 300);
       refs.inputFecha.valueAsDate = new Date();
     }
   });
@@ -77,23 +84,29 @@ function attachListeners() {
       return;
     }
 
-    refs.pdfEstado.textContent = 'Analizando...';
-    try {
-      const result = await analyzePDF(file);
-      refs.pdfEstado.textContent = 'Análisis completado correctamente';
-      mostrarResultadosPDF(result);
+   refs.pdfEstado.textContent = '⏳ Analizando...';
+   refs.pdfEstado.classList.remove('success', 'error');
+   refs.analizarPdfBtn.disabled = true;
+   try {
+     const result = await analyzePDF(file);
+     refs.pdfEstado.textContent = '✓ Análisis completado correctamente';
+     refs.pdfEstado.classList.add('success');
+     mostrarResultadosPDF(result);
 
-      // Integrar resultados sumando a contadores
-      contadores['GBA 1'] += result.byZone['GBA 1'] || 0;
-      contadores['GBA 2'] += result.byZone['GBA 2'] || 0;
-      contadores['Zonas Lejanas'] += result.byZone['Zonas Lejanas'] || 0;
-      contadores['CABA'] += result.byZone['CABA'] || 0;
-      actualizarVistaContadores();
-    } catch (err) {
-      console.error(err);
-      refs.pdfEstado.textContent = 'Error al procesar archivo';
-      refs.pdfResultados.innerHTML = '<div class="line">Error: ' + (err.message || 'desconocido') + '</div>';
-    }
+     // Integrar resultados sumando a contadores
+     contadores['GBA 1'] += result.byZone['GBA 1'] || 0;
+     contadores['GBA 2'] += result.byZone['GBA 2'] || 0;
+     contadores['Zonas Lejanas'] += result.byZone['Zonas Lejanas'] || 0;
+     contadores['CABA'] += result.byZone['CABA'] || 0;
+     actualizarVistaContadores();
+   } catch (err) {
+     console.error(err);
+     refs.pdfEstado.textContent = '✗ Error al procesar archivo';
+     refs.pdfEstado.classList.add('error');
+     refs.pdfResultados.innerHTML = '<div class="line">Error: ' + (err.message || 'desconocido') + '</div>';
+   } finally {
+     refs.analizarPdfBtn.disabled = false;
+   }
   });
 
   // Close suggestion lists on outside click
@@ -162,6 +175,14 @@ function actualizarVistaContadores() {
   refs.gba2.value = contadores['GBA 2'];
   refs.lejanas.value = contadores['Zonas Lejanas'];
   refs.caba.value = contadores['CABA'];
+  
+  // Agregar animación de pulso a cada contador
+  [refs.gba1, refs.gba2, refs.lejanas, refs.caba].forEach(input => {
+    input.parentElement.style.animation = 'none';
+    setTimeout(() => {
+      input.parentElement.style.animation = 'successPulse 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+    }, 10);
+  });
 }
 
 function sincronizarContadores() {
@@ -186,7 +207,16 @@ function guardarRegistro() {
     historial.push(nuevo);
   }
   saveHistorial(historial);
-  refs.resultado.textContent = '¡Registro guardado!';
+  
+  // Feedback visual mejorado
+  refs.resultado.textContent = '✓ ¡Registro guardado!';
+  refs.resultado.classList.add('success');
+  setTimeout(() => refs.resultado.classList.remove('success'), 1000);
+  
+  // Animación del botón
+  refs.guardarBtn.style.transform = 'scale(0.95)';
+  setTimeout(() => refs.guardarBtn.style.transform = 'scale(1)', 150);
+  
   registroEditandoId = null;
   renderizarHistorial();
 }
@@ -235,9 +265,14 @@ function renderizarHistorial() {
   refs.listaHistorial.querySelectorAll('.btn-eliminar').forEach(btn => btn.addEventListener('click', (e) => {
     const id = Number(e.currentTarget.dataset.id);
     if (confirm('¿Borrar este registro permanentemente?')) {
-      const hist = getHistorial().filter(r => r.id !== id);
-      saveHistorial(hist);
-      renderizarHistorial();
+      const registroDiv = e.currentTarget.closest('.registro-dia');
+      // Animación de salida
+      registroDiv.style.animation = 'registroSlideOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards';
+      setTimeout(() => {
+        const hist = getHistorial().filter(r => r.id !== id);
+        saveHistorial(hist);
+        renderizarHistorial();
+      }, 300);
     }
   }));
 }

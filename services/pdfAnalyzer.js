@@ -1,78 +1,17 @@
 import { zonas } from '../data/zonas.js';
 import { normalizar } from '../utils/helpers.js';
 
-// Uses global pdfjsLib (loaded via CDN in index.html)
-
-// Extract individual labels from the full PDF text by locating CP markers.
-export function extractLabels(text) {
-  if (!text) return [];
-  // Normalize line endings
-  const norm = text.replace(/\r/g, '\n');
-  const cpRegex = /cp\s*[:\-]?\s*\d{3,6}/gi;
-  const matches = [];
-  let m;
-  while ((m = cpRegex.exec(norm)) !== null) {
-    matches.push(m.index);
-  }
-  if (matches.length === 0) {
-    // Fallback: try splitting by double newlines if no CP markers found
-    return norm.split(/\n\s*\n/).map(s => s.trim()).filter(Boolean);
-  }
-
-  const labels = [];
-  for (let i = 0; i < matches.length; i++) {
-    const start = matches[i];
-    const end = i + 1 < matches.length ? matches[i + 1] : norm.length;
-    const chunk = norm.slice(start, end).trim();
-    labels.push(chunk);
-  }
-  return labels;
-}
-
-// From a single label block, extract the primary location: the first non-empty line after the CP line
-export function getPrimaryLocation(labelText) {
-  if (!labelText) return null;
-  const lines = labelText.split(/\n+/).map(l => l.trim()).filter(Boolean);
-  if (!lines.length) return null;
-
-  // Find line containing 'CP'
-  const cpIdx = lines.findIndex(l => /\bcp\b/i.test(l));
-
-  if (cpIdx === -1) {
-    // If no CP line, attempt to find a line that looks like a postal code alone and take the next
-    const idx = lines.findIndex(l => /^\d{3,6}$/.test(l));
-    if (idx !== -1 && idx + 1 < lines.length) return lines[idx + 1];
-    return null;
-  }
-
-  const cpLine = lines[cpIdx];
-  // Check if locality appears on same line after the CP
-  const sameLineMatch = cpLine.match(/\bcp\b\s*[:\-]?\s*\d{3,6}\s*(.*)$/i);
-  if (sameLineMatch && sameLineMatch[1] && sameLineMatch[1].trim()) {
-    return sameLineMatch[1].trim();
-  }
-
-  // Otherwise take the next non-empty line after CP
-  for (let j = cpIdx + 1; j < lines.length; j++) {
-    const candidate = lines[j].trim();
-    if (candidate && !/^direccion\b/i.test(candidate) && !/^ref(erencia)?\b/i.test(candidate)) {
-      return candidate;
-    }
-  }
-  return null;
-}
-
-// Classify a normalized location string against the zonas map
+// Clasifica un string de ubicación normalizado contra el mapa de zonas
 export function classifyLocation(location) {
   if (!location) return 'Unknown';
   const locNorm = normalizar(location);
 
-  // Exact match first
+  // Coincidencia exacta primero
   for (const key of Object.keys(zonas)) {
     if (normalizar(key) === locNorm) return zonas[key];
   }
 
-  // Try more relaxed matching: prefer longest matching key
+  // Coincidencia relajada: prefiere la clave más larga que coincida
   const candidates = Object.keys(zonas).filter(k => {
     const kn = normalizar(k);
     return kn.includes(locNorm) || locNorm.includes(kn) || kn.startsWith(locNorm) || locNorm.startsWith(kn);
@@ -85,22 +24,6 @@ export function classifyLocation(location) {
   return 'Unknown';
 }
 
-export function calculateZones(labels) {
-  const byZone = { 'GBA 1': 0, 'GBA 2': 0, 'Zonas Lejanas': 0, 'CABA': 0, 'Unknown': 0 };
-  const raw = [];
-
-  for (const label of labels) {
-    const loc = getPrimaryLocation(label);
-    const zone = classifyLocation(loc);
-    raw.push({ location: loc, zone });
-    if (byZone.hasOwnProperty(zone)) byZone[zone] += 1;
-    else byZone.Unknown += 1;
-  }
-
-  const total = labels.length;
-  return { total, byZone, raw };
-}
-
 export async function analyzePDF(file) {
   if (!file || file.type !== 'application/pdf') throw new Error('Archivo inválido, se requiere un PDF.');
 
@@ -110,20 +33,93 @@ export async function analyzePDF(file) {
     const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
     const pdf = await loadingTask.promise;
 
-    let fullText = '';
+    const extractedLocations = [];
+
+    // Procesamos página por página para mantener el orden de las etiquetas
     for (let i = 1; i <= pdf.numPages; i++) {
       const page = await pdf.getPage(i);
       const content = await page.getTextContent();
-      // Preserve line breaks to allow label extraction
-      const strs = content.items.map(it => it.str).join('\n');
-      fullText += '\n' + strs + '\n';
+      
+      // Filtramos líneas vacías y limpiamos espacios
+      const lines = content.items.map(it => it.str.trim()).filter(Boolean);
+      
+      const cpRecords = [];
+      
+      // Identificamos las posiciones de los Códigos Postales de forma flexible
+      for (let idx = 0; idx < lines.length; idx++) {
+        const line = lines[idx];
+        
+        if (/^cp\b/i.test(line)) {
+          // Caso A: El CP y los dígitos están juntos en la misma línea (ej: "CP: 1424")
+          const matchSameLine = line.match(/^cp\s*[:\-]?\s*(\d+)/i);
+          
+          if (matchSameLine) {
+            cpRecords.push({ cpLineIdx: idx, cpNumLineIdx: idx, cpNumber: matchSameLine[1] });
+          } else {
+            // Caso B: El texto es solo "CP:" y el número está en las líneas siguientes
+            for (let j = idx + 1; j < Math.min(idx + 5, lines.length); j++) {
+              if (/^\d+$/.test(lines[j])) {
+                cpRecords.push({ cpLineIdx: idx, cpNumLineIdx: j, cpNumber: lines[j] });
+                break;
+              }
+            }
+          }
+        }
+      }
+
+      if (cpRecords.length === 0) continue;
+
+      // DETECCIÓN DE ESTRUCTURA (Horizontal vs Vertical)
+      // Si la distancia entre el primer "CP:" y el último "CP:" de la página es corta
+      // (menos de 15 líneas), significa que están agrupados horizontalmente uno tras otro.
+      const isHorizontal = cpRecords.length > 1 && (cpRecords[cpRecords.length - 1].cpLineIdx - cpRecords[0].cpLineIdx < 15);
+
+      for (let k = 0; k < cpRecords.length; k++) {
+        let loc = 'Unknown';
+        
+        if (isHorizontal) {
+          // MODO HORIZONTAL: Las localidades empiezan inmediatamente después del último número de CP.
+          // Sumamos el índice del último número de CP + 1 + la posición de la etiqueta actual (k)
+          const lastCpNumIdx = cpRecords[cpRecords.length - 1].cpNumLineIdx;
+          const locIndex = lastCpNumIdx + 1 + k;
+          if (lines[locIndex]) {
+            loc = lines[locIndex];
+          }
+        } else {
+          // MODO VERTICAL: La localidad es la primera línea válida debajo del número de CP
+          const startIdx = cpRecords[k].cpNumLineIdx + 1;
+          for (let j = startIdx; j < lines.length; j++) {
+            const candidate = lines[j];
+            // Frenamos si cruzamos a campos clave de la misma etiqueta o al siguiente CP
+            if (/^(direccion|barrio|ref|destinatario|cp\b)/i.test(candidate)) {
+              break;
+            }
+            if (candidate) {
+              loc = candidate;
+              break;
+            }
+          }
+        }
+        extractedLocations.push(loc);
+      }
     }
 
-    const labels = extractLabels(fullText);
-    const result = calculateZones(labels);
+    // Calculamos los totales finales y armamos el reporte por zonas
+    const byZone = { 'GBA 1': 0, 'GBA 2': 0, 'Zonas Lejanas': 0, 'CABA': 0, 'Unknown': 0 };
+    const raw = [];
 
-    // Ensure total equals number of labels (one envio per etiqueta)
-    return result;
+    for (const loc of extractedLocations) {
+      const zone = classifyLocation(loc);
+      raw.push({ location: loc, zone });
+      
+      if (byZone.hasOwnProperty(zone)) {
+        byZone[zone] += 1;
+      } else {
+        byZone.Unknown += 1;
+      }
+    }
+
+    return { total: extractedLocations.length, byZone, raw };
   } catch (err) {
     console.error('Error analyzing PDF', err);
     throw err;
