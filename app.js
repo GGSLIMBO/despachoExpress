@@ -89,25 +89,30 @@ function attachListeners() {
    refs.analizarPdfBtn.disabled = true;
    try {
      const result = await analyzePDF(file);
-     refs.pdfEstado.textContent = '✓ Análisis completado correctamente';
+     
+     // Mensaje personalizado según si se usó OCR
+     const mensaje = result.usedOCR 
+       ? '✓ PDF escaneado procesado con OCR exitosamente' 
+       : '✓ Análisis completado correctamente';
+     refs.pdfEstado.textContent = mensaje;
      refs.pdfEstado.classList.add('success');
      mostrarResultadosPDF(result);
 
-     // Integrar resultados sumando a contadores
-     contadores['GBA 1'] += result.byZone['GBA 1'] || 0;
-     contadores['GBA 2'] += result.byZone['GBA 2'] || 0;
-     contadores['Zonas Lejanas'] += result.byZone['Zonas Lejanas'] || 0;
-     contadores['CABA'] += result.byZone['CABA'] || 0;
-     actualizarVistaContadores();
-   } catch (err) {
-     console.error(err);
-     refs.pdfEstado.textContent = '✗ Error al procesar archivo';
-     refs.pdfEstado.classList.add('error');
-     refs.pdfResultados.innerHTML = '<div class="line">Error: ' + (err.message || 'desconocido') + '</div>';
-   } finally {
-     refs.analizarPdfBtn.disabled = false;
-   }
-  });
+      // Integrar resultados sumando a contadores
+      contadores['GBA 1'] += result.byZone['GBA 1'] || 0;
+      contadores['GBA 2'] += result.byZone['GBA 2'] || 0;
+      contadores['Zonas Lejanas'] += result.byZone['Zonas Lejanas'] || 0;
+      contadores['CABA'] += result.byZone['CABA'] || 0;
+      actualizarVistaContadores();
+    } catch (err) {
+      console.error(err);
+      refs.pdfEstado.textContent = '✗ Error al procesar archivo';
+      refs.pdfEstado.classList.add('error');
+      refs.pdfResultados.innerHTML = '<div class="line">Error: ' + (err.message || 'desconocido') + '</div>';
+    } finally {
+      refs.analizarPdfBtn.disabled = false;
+    }
+   });
 
   // Close suggestion lists on outside click
   document.addEventListener('click', (e) => {
