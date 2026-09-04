@@ -24,128 +24,7 @@ export function classifyLocation(location) {
   return 'Unknown';
 }
 
-// Intenta extraer texto del PDF
-async function extractTextFromPDF(pdf) {
-  const lines = [];
-
-  for (let i = 1; i <= pdf.numPages; i++) {
-    const page = await pdf.getPage(i);
-    const content = await page.getTextContent();
-    const pageLines = content.items.map(it => it.str.trim()).filter(Boolean);
-    lines.push(...pageLines);
-  }
-
-  return lines;
-}
-
-// Detecta si el PDF tiene texto extraíble significativo
-async function hasMeaningfulText(pdf) {
-  try {
-    const lines = await extractTextFromPDF(pdf);
-    console.log('📄 Total líneas extraídas:', lines.length);
-    console.log('📋 Primeras 10 líneas:', lines.slice(0, 10));
-    
-    // Si hay menos de 5 líneas con contenido real, es probablemente un escaneo
-    const meaningfulLines = lines.filter(line => 
-      line.length > 2 && !/^\d+$/.test(line)
-    );
-    console.log('✨ Líneas significativas:', meaningfulLines.length);
-    return meaningfulLines.length >= 5;
-  } catch (err) {
-    console.error('Error en hasMeaningfulText:', err);
-    return false;
-  }
-}
-
-// Procesa ubicaciones buscando el patrón: número (CP) → localidad
-function processLocations(lines) {
-  console.log('🔍 processLocations recibió', lines.length, 'líneas');
-  
-  const extractedLocations = [];
-
-  // Estrategia: buscar líneas que sean solo números (códigos postales)
-  // La siguiente línea debería ser la localidad
-  for (let idx = 0; idx < lines.length - 1; idx++) {
-    const line = lines[idx];
-    const nextLine = lines[idx + 1];
-    
-    // Si esta línea es solo números y la siguiente tiene letras y no es metadato
-    if (/^\d+$/.test(line) && nextLine && nextLine.length > 0) {
-      // Validar que la siguiente línea es una localidad válida
-      // (contiene letras, no es un número, no es metadato)
-      if (!/^\d+$/.test(nextLine) && 
-          !/^(flex|pack|envio|referencia|direccion|barrio|destinatario|resid|comercial)/i.test(nextLine)) {
-        
-        console.log(`✓ CP[${line}] → Localidad: "${nextLine}"`);
-        extractedLocations.push(nextLine);
-      }
-    }
-  }
-
-  console.log('📦 Localidades extraídas:', extractedLocations);
-  console.log('📊 Total encontrado:', extractedLocations.length);
-  return extractedLocations;
-}
-
-// Aplica OCR usando Tesseract.js
-async function performOCR(pdf) {
-  if (typeof Tesseract === 'undefined') {
-    throw new Error('Tesseract.js no está disponible. Se requiere para procesar PDFs escaneados.');
-  }
-
-  const allLines = [];
-
-  for (let i = 1; i <= pdf.numPages; i++) {
-    try {
-      console.log(`🖼️ OCR: Procesando página ${i}...`);
-      
-      // Renderizar página como imagen
-      const page = await pdf.getPage(i);
-      const viewport = page.getViewport({ scale: 2 });
-      
-      const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d');
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
-
-      await page.render({ canvasContext: context, viewport }).promise;
-
-      // Aplicar OCR a la imagen
-      const imageData = canvas.toDataURL('image/png');
-      const worker = await Tesseract.createWorker();
-      await worker.loadLanguage('spa');
-      await worker.initialize('spa');
-      
-      console.log(`🔄 OCR ejecutando en página ${i}...`);
-      const result = await worker.recognize(imageData);
-      const ocrText = result.data.text;
-      
-      await worker.terminate();
-
-      console.log(`✅ OCR completado en página ${i}. Texto: ${ocrText.length} caracteres`);
-
-      // Procesar texto OCR
-      const pageLines = ocrText
-        .split('\n')
-        .map(line => line.trim())
-        .filter(line => line && line.length > 0);
-      
-      console.log(`📋 OCR página ${i}: ${pageLines.length} líneas`);
-      console.log('Líneas:', pageLines);
-      
-      allLines.push(...pageLines);
-    } catch (err) {
-      console.error(`❌ Error en OCR de página ${i}:`, err);
-    }
-  }
-
-  console.log(`📊 Total líneas de OCR: ${allLines.length}`);
-  return processLocations(allLines);
-}
-
 export async function analyzePDF(file) {
-  console.log('🚀 analyzePDF iniciado con archivo:', file.name);
-  
   if (!file || file.type !== 'application/pdf') throw new Error('Archivo inválido, se requiere un PDF.');
 
   const arrayBuffer = await file.arrayBuffer();
@@ -154,26 +33,76 @@ export async function analyzePDF(file) {
     const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
     const pdf = await loadingTask.promise;
 
-    console.log(`📄 PDF cargado: ${pdf.numPages} páginas`);
+    const extractedLocations = [];
 
-    let extractedLocations = [];
-    let usedOCR = false;
+    // Procesamos página por página para mantener el orden de las etiquetas
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      
+      // Filtramos líneas vacías y limpiamos espacios
+      const lines = content.items.map(it => it.str.trim()).filter(Boolean);
+      
+      const cpRecords = [];
+      
+      // Identificamos las posiciones de los Códigos Postales de forma flexible
+      for (let idx = 0; idx < lines.length; idx++) {
+        const line = lines[idx];
+        
+        if (/^cp\b/i.test(line)) {
+          // Caso A: El CP y los dígitos están juntos en la misma línea (ej: "CP: 1424")
+          const matchSameLine = line.match(/^cp\s*[:\-]?\s*(\d+)/i);
+          
+          if (matchSameLine) {
+            cpRecords.push({ cpLineIdx: idx, cpNumLineIdx: idx, cpNumber: matchSameLine[1] });
+          } else {
+            // Caso B: El texto es solo "CP:" y el número está en las líneas siguientes
+            for (let j = idx + 1; j < Math.min(idx + 5, lines.length); j++) {
+              if (/^\d+$/.test(lines[j])) {
+                cpRecords.push({ cpLineIdx: idx, cpNumLineIdx: j, cpNumber: lines[j] });
+                break;
+              }
+            }
+          }
+        }
+      }
 
-    // Intentar extraer texto directamente
-    const hasText = await hasMeaningfulText(pdf);
-    console.log('📖 ¿Tiene texto extraíble?', hasText);
+      if (cpRecords.length === 0) continue;
 
-    if (hasText) {
-      console.log('✅ Usando extracción de texto directo');
-      const lines = await extractTextFromPDF(pdf);
-      extractedLocations = processLocations(lines);
-    } else {
-      console.log('🔄 PDF escaneado detectado, aplicando OCR...');
-      extractedLocations = await performOCR(pdf);
-      usedOCR = true;
+      // DETECCIÓN DE ESTRUCTURA (Horizontal vs Vertical)
+      // Si la distancia entre el primer "CP:" y el último "CP:" de la página es corta
+      // (menos de 15 líneas), significa que están agrupados horizontalmente uno tras otro.
+      const isHorizontal = cpRecords.length > 1 && (cpRecords[cpRecords.length - 1].cpLineIdx - cpRecords[0].cpLineIdx < 15);
+
+      for (let k = 0; k < cpRecords.length; k++) {
+        let loc = 'Unknown';
+        
+        if (isHorizontal) {
+          // MODO HORIZONTAL: Las localidades empiezan inmediatamente después del último número de CP.
+          // Sumamos el índice del último número de CP + 1 + la posición de la etiqueta actual (k)
+          const lastCpNumIdx = cpRecords[cpRecords.length - 1].cpNumLineIdx;
+          const locIndex = lastCpNumIdx + 1 + k;
+          if (lines[locIndex]) {
+            loc = lines[locIndex];
+          }
+        } else {
+          // MODO VERTICAL: La localidad es la primera línea válida debajo del número de CP
+          const startIdx = cpRecords[k].cpNumLineIdx + 1;
+          for (let j = startIdx; j < lines.length; j++) {
+            const candidate = lines[j];
+            // Frenamos si cruzamos a campos clave de la misma etiqueta o al siguiente CP
+            if (/^(direccion|barrio|ref|destinatario|cp\b)/i.test(candidate)) {
+              break;
+            }
+            if (candidate) {
+              loc = candidate;
+              break;
+            }
+          }
+        }
+        extractedLocations.push(loc);
+      }
     }
-
-    console.log('📍 Total localidades extraídas:', extractedLocations.length);
 
     // Calculamos los totales finales y armamos el reporte por zonas
     const byZone = { 'GBA 1': 0, 'GBA 2': 0, 'Zonas Lejanas': 0, 'CABA': 0, 'Unknown': 0 };
@@ -190,16 +119,9 @@ export async function analyzePDF(file) {
       }
     }
 
-    console.log('✅ Resultado final:', { total: extractedLocations.length, byZone, usedOCR });
-
-    return { 
-      total: extractedLocations.length, 
-      byZone, 
-      raw,
-      usedOCR
-    };
+    return { total: extractedLocations.length, byZone, raw };
   } catch (err) {
-    console.error('❌ Error analyzing PDF', err);
+    console.error('Error analyzing PDF', err);
     throw err;
   }
 }
