@@ -50,53 +50,6 @@ async function hasMeaningfulText(pdf) {
   }
 }
 
-// Aplica OCR usando Tesseract.js
-async function performOCR(pdf) {
-  if (typeof Tesseract === 'undefined') {
-    throw new Error('Tesseract.js no está disponible. Se requiere para procesar PDFs escaneados.');
-  }
-
-  const extractedLocations = [];
-
-  for (let i = 1; i <= pdf.numPages; i++) {
-    try {
-      // Renderizar página como imagen
-      const page = await pdf.getPage(i);
-      const viewport = page.getViewport({ scale: 2 }); // 2x para mejor OCR
-      
-      const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d');
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
-
-      await page.render({ canvasContext: context, viewport }).promise;
-
-      // Aplicar OCR a la imagen
-      const imageData = canvas.toDataURL('image/png');
-      const worker = await Tesseract.createWorker();
-      await worker.loadLanguage('spa'); // Español
-      await worker.initialize('spa');
-      
-      const result = await worker.recognize(imageData);
-      const ocrText = result.data.text;
-      
-      await worker.terminate();
-
-      // Procesar texto OCR de forma similar al texto extraído
-      const lines = ocrText
-        .split('\n')
-        .map(line => line.trim())
-        .filter(Boolean);
-      
-      extractedLocations.push(...lines);
-    } catch (err) {
-      console.warn(`Error en OCR de página ${i}:`, err);
-    }
-  }
-
-  return extractedLocations;
-}
-
 // Procesa ubicaciones del PDF (tanto de texto como de OCR)
 function processLocations(lines) {
   const extractedLocations = [];
@@ -158,6 +111,64 @@ function processLocations(lines) {
   }
 
   return extractedLocations;
+}
+
+// Aplica OCR usando Tesseract.js y procesa correctamente
+async function performOCR(pdf) {
+  if (typeof Tesseract === 'undefined') {
+    throw new Error('Tesseract.js no está disponible. Se requiere para procesar PDFs escaneados.');
+  }
+
+  const allLines = [];
+
+  for (let i = 1; i <= pdf.numPages; i++) {
+    try {
+      // Renderizar página como imagen
+      const page = await pdf.getPage(i);
+      const viewport = page.getViewport({ scale: 2 }); // 2x para mejor OCR
+      
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+
+      await page.render({ canvasContext: context, viewport }).promise;
+
+      // Aplicar OCR a la imagen
+      const imageData = canvas.toDataURL('image/png');
+      const worker = await Tesseract.createWorker();
+      await worker.loadLanguage('spa'); // Español
+      await worker.initialize('spa');
+      
+      const result = await worker.recognize(imageData);
+      const ocrText = result.data.text;
+      
+      await worker.terminate();
+
+      // Procesar OCR filtrando ruido agresivamente
+      const pageLines = ocrText
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => {
+          // Filtrar líneas vacías o muy cortas
+          if (!line || line.length < 2) return false;
+          // Descartar líneas que sean solo números largos (códigos postales errados)
+          if (/^\d{4,}$/.test(line)) return false;
+          // Descartar líneas de solo símbolos o caracteres especiales
+          if (/^[^a-záéíóúñ\d\s]+$/i.test(line)) return false;
+          // Descartar líneas que sean casi solo números con pocos caracteres
+          if (/^\d{1,3}$/.test(line)) return false;
+          return true;
+        });
+      
+      allLines.push(...pageLines);
+    } catch (err) {
+      console.warn(`Error en OCR de página ${i}:`, err);
+    }
+  }
+
+  // Procesar con la misma lógica de CP que el método de texto extraído
+  return processLocations(allLines);
 }
 
 export async function analyzePDF(file) {
