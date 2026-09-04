@@ -42,8 +42,10 @@ async function extractTextFromPDF(pdf) {
 async function hasMeaningfulText(pdf) {
   try {
     const lines = await extractTextFromPDF(pdf);
-    // Si hay menos de 5 líneas o la mayoría son números, probablemente es un escaneo
-    const meaningfulLines = lines.filter(line => !/^\d+$/.test(line));
+    // Si hay menos de 5 líneas con contenido real, es probablemente un escaneo
+    const meaningfulLines = lines.filter(line => 
+      line.length > 2 && !/^\d+$/.test(line)
+    );
     return meaningfulLines.length >= 5;
   } catch {
     return false;
@@ -60,7 +62,7 @@ function processLocations(lines) {
     const line = lines[idx];
     
     if (/^cp\b/i.test(line)) {
-      // Caso A: El CP y los dígitos están juntos en la misma línea
+      // Caso A: El CP y los dígitos están juntos en la misma línea (ej: "CP: 1424")
       const matchSameLine = line.match(/^cp\s*[:\-]?\s*(\d+)/i);
       
       if (matchSameLine) {
@@ -80,13 +82,16 @@ function processLocations(lines) {
   if (cpRecords.length === 0) return extractedLocations;
 
   // DETECCIÓN DE ESTRUCTURA (Horizontal vs Vertical)
+  // Si la distancia entre el primer "CP:" y el último "CP:" de la página es corta
+  // (menos de 15 líneas), significa que están agrupados horizontalmente uno tras otro.
   const isHorizontal = cpRecords.length > 1 && (cpRecords[cpRecords.length - 1].cpLineIdx - cpRecords[0].cpLineIdx < 15);
 
   for (let k = 0; k < cpRecords.length; k++) {
     let loc = 'Unknown';
     
     if (isHorizontal) {
-      // MODO HORIZONTAL: Las localidades empiezan inmediatamente después del último número de CP
+      // MODO HORIZONTAL: Las localidades empiezan inmediatamente después del último número de CP.
+      // Sumamos el índice del último número de CP + 1 + la posición de la etiqueta actual (k)
       const lastCpNumIdx = cpRecords[cpRecords.length - 1].cpNumLineIdx;
       const locIndex = lastCpNumIdx + 1 + k;
       if (lines[locIndex]) {
@@ -97,7 +102,7 @@ function processLocations(lines) {
       const startIdx = cpRecords[k].cpNumLineIdx + 1;
       for (let j = startIdx; j < lines.length; j++) {
         const candidate = lines[j];
-        // Frenamos si cruzamos a campos clave o al siguiente CP
+        // Frenamos si cruzamos a campos clave de la misma etiqueta o al siguiente CP
         if (/^(direccion|barrio|ref|destinatario|cp\b)/i.test(candidate)) {
           break;
         }
@@ -113,7 +118,7 @@ function processLocations(lines) {
   return extractedLocations;
 }
 
-// Aplica OCR usando Tesseract.js y procesa correctamente
+// Aplica OCR usando Tesseract.js
 async function performOCR(pdf) {
   if (typeof Tesseract === 'undefined') {
     throw new Error('Tesseract.js no está disponible. Se requiere para procesar PDFs escaneados.');
@@ -145,21 +150,11 @@ async function performOCR(pdf) {
       
       await worker.terminate();
 
-      // Procesar OCR filtrando ruido agresivamente
+      // Procesar texto OCR: mantener líneas pero usar la lógica de CP
       const pageLines = ocrText
         .split('\n')
         .map(line => line.trim())
-        .filter(line => {
-          // Filtrar líneas vacías o muy cortas
-          if (!line || line.length < 2) return false;
-          // Descartar líneas que sean solo números largos (códigos postales errados)
-          if (/^\d{4,}$/.test(line)) return false;
-          // Descartar líneas de solo símbolos o caracteres especiales
-          if (/^[^a-záéíóúñ\d\s]+$/i.test(line)) return false;
-          // Descartar líneas que sean casi solo números con pocos caracteres
-          if (/^\d{1,3}$/.test(line)) return false;
-          return true;
-        });
+        .filter(line => line && line.length > 0); // Solo eliminar vacías
       
       allLines.push(...pageLines);
     } catch (err) {
